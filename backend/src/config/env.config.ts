@@ -7,6 +7,7 @@ function getEnv(key: string, fallback?: string): string {
   if (!value) {
     throw new Error(`Missing required env variable: ${key}`);
   }
+  console.log(`ENV: ${key} Loaded`);
   return value;
 }
 
@@ -15,6 +16,8 @@ export const config = {
   nodeEnv: getEnv("NODE_ENV", "development"),
 
   supabase: {
+    db_url: getEnv("SUPABASE_DATABASE_URL"),
+    direct_url: getEnv("SUPABASE_DIRECT_URL"),
     url: getEnv("SUPABASE_URL"),
     secretKey: getEnv("SUPABASE_SECRET_KEY"),
     publishableKey: getEnv("SUPABASE_PUBLISHABLE_KEY"),

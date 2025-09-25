@@ -1,4 +1,3 @@
-// import { expressjwtSecret } from "express-jwt";
 import { jwtVerify, createRemoteJWKSet } from "jose";
 import type { Request, Response, NextFunction } from "express";
 import {config} from "../config/env.config.js";

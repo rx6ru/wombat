@@ -1,15 +1,37 @@
-.env
-
+# ---------------- Node Modules ----------------
 node_modules/
 
+# ---------------- Build / Output ----------------
 dist/
 build/
 
-logs
+# ---------------- Logs ----------------
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
+# ---------------- Prisma ----------------
 /backend/src/generated/prisma
+.prisma/
 
+# ---------------- Environment ----------------
+.env
+.env.local
+.env.*.local
+
+# ---------------- Frontend / Test ----------------
 testfront/
 
+# ---------------- Editor / OS ----------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ---------------- TypeScript ----------------
+*.tsbuildinfo
+
+# ---------------- Misc ----------------
 todo.txt
