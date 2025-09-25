@@ -1,4 +1,5 @@
 .env
+
 node_modules/
 
 dist/
@@ -6,3 +7,9 @@ build/
 
 logs
 *.log
+
+/backend/src/generated/prisma
+
+testfront/
+
+todo.txt
