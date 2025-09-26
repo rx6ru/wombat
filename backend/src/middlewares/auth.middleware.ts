@@ -5,11 +5,8 @@ import {config} from "../config/env.config.js";
 const JWKS_URL = config.supabase.jwks_url;
 const JWKS = createRemoteJWKSet(new URL(JWKS_URL));
 
-interface AuthRequest extends Request {
-  user?: any;
-}
 
-export async function protectRoute(req: AuthRequest, res: Response, next: NextFunction) {
+export async function protectRoute(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: "No token provided" });
@@ -21,7 +18,9 @@ export async function protectRoute(req: AuthRequest, res: Response, next: NextFu
       algorithms: ["ES256"]
     });
 
-    req.user = payload;
+    req.user = {
+      sub: payload.sub as string
+    };
     next();
   } catch (err) {
     console.error(err);

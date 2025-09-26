@@ -13,6 +13,13 @@ app.use(express.json());
 app.use("/user", protectRoute,userRoutes);
 app.use("/key", protectRoute, keyRoutes);
 
+//fallback route
+app.use((req, res) => res.status(404).json(
+    { 
+        error: "Not found" 
+    }
+));
+
 app.listen(config.port, () => console.log(
     `Server running on port ${config.port}`
 ));

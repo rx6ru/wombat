@@ -5,8 +5,11 @@ import { getKeys, addKey, updateKey, deleteKey } from "../controllers/key.contro
 const router = Router();
 
 router.get("/keys", getKeys);
+
 router.post("/key", keyAddedLog,addKey);
+
 router.put("/key", keyUpdatedLog, updateKey);
+
 router.delete("/key", keyDeletedLog, deleteKey);
 
 export default router;
