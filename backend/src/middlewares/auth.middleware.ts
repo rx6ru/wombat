@@ -21,6 +21,9 @@ export async function protectRoute(req: Request, res: Response, next: NextFuncti
     req.user = {
       sub: payload.sub as string
     };
+    
+    console.log(`AUTH: ${JSON.stringify(req.user)} Authenticated`);
+
     next();
   } catch (err) {
     console.error(err);

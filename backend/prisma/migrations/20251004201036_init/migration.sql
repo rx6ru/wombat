@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "public"."User" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
     "authId" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -12,8 +12,8 @@ CREATE TABLE "public"."User" (
 
 -- CreateTable
 CREATE TABLE "public"."ApiKey" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "id" UUID NOT NULL,
+    "userId" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "service" TEXT,
     "key" TEXT NOT NULL,
