@@ -18,7 +18,7 @@ export const initUserNameByAuthId = async (authId: string) => {
         authUser.user_metadata?.display_name ||
         authUser.user_metadata?.full_name ||
         null;
-    const email = authUser.email ?? null;
+    const email = authUser.email ?? "";
 
     const finalUsername = displayName || generateRandomName();
 
