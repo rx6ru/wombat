@@ -8,8 +8,8 @@ router.get("/keys", getKeys);
 
 router.post("/key", keyAddedLog,addKey);
 
-router.put("/key", keyUpdatedLog, updateKey);
+router.put("/key/:id", keyUpdatedLog, updateKey);
 
-router.delete("/key", keyDeletedLog, deleteKey);
+router.delete("/key/:id", keyDeletedLog, deleteKey);
 
 export default router;
