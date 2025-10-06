@@ -19,13 +19,11 @@ export const ApiKeySchema = z.object({
     .max(500, "Key is too long"),
 
   reqSample: z
-    .string()
-    .max(2000, "Request sample too large")
+    .json()
     .optional(),
 
   resSample: z
-    .string()
-    .max(2000, "Response sample too large")
+    .json()
     .optional(), 
 
   description: z

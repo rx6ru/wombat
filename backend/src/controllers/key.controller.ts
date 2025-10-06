@@ -82,6 +82,9 @@ const addKey = async (req: Request, res: Response) => {
 
     return res.status(201).json(key);
   } catch (err: any) {
+    if (err instanceof ValidationError) {
+      return res.status(err.status).json({ error: err.message, details: err.details });
+    }
     console.error(err);
     return res.status(500).json({ error: err.message ?? "Server error" });
   }
@@ -114,6 +117,9 @@ const updateKey = async (req: Request, res: Response) => {
 
     return res.status(200).json(key);
   } catch (err: any) {
+    if (err instanceof ValidationError) {
+      return res.status(err.status).json({ error: err.message, details: err.details });
+    }
     console.error(err);
     return res.status(500).json({ error: err.message ?? "Server error" });
   }

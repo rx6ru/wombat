@@ -1,6 +1,8 @@
 import { supabaseAdmin } from "../config/supabase.config.js";
 import prisma from "../config/prisma.config.js";
 import { generateRandomName } from "../utils/genrandom.username.js";
+import { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export const initUserNameByAuthId = async (authId: string) => {
 
@@ -20,13 +22,27 @@ export const initUserNameByAuthId = async (authId: string) => {
 
     const finalUsername = displayName || generateRandomName();
 
-    const newUser = await prisma.profile.create({
-        data: {
-            authId,         // Supabase Auth UUID
-            username: finalUsername,
-            email,
-        },
-    });
-
-    return newUser.username;
+    try {
+        const newUser = await prisma.profile.create({
+            data: {
+                authId,         // Supabase Auth UUID
+                username: finalUsername,
+                email,
+            },
+        });
+        return newUser.username;
+    } catch (e) {
+        
+        if (e instanceof PrismaClientKnownRequestError && e.code === 'P2002') {
+            // Race condition: Profile was created between the check in the controller and this create call.
+            // Safely fetch and return the existing profile.
+            const existingProfile = await prisma.profile.findUnique({
+                where: { authId },
+                select: { username: true },
+            });
+            return existingProfile!.username; // We can assert non-null because the P2002 error proves it exists.
+        }
+        // Re-throw any other errors.
+        throw e;
+    }
 };
