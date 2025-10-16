@@ -33,12 +33,20 @@
             if (error) throw error;
             setMessage("Check your email for the confirmation link!");
           } else {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabase.auth.signInWithPassword({
               email,
               password,
             });
             if (error) throw error;
             // The page will redirect on success via the server component logic
+
+            const accessToken = data.session?.access_token;
+
+            if (accessToken) {
+                // Store this token securely (e.g., in localStorage or an HTTP-only cookie)
+                localStorage.setItem('supabase-access-token', accessToken);
+                console.log("JWT extracted and stored successfully.");
+            }
           }
         } catch (err: unknown) {
           if (err instanceof Error) {
