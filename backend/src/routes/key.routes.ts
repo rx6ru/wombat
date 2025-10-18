@@ -1,12 +1,34 @@
 import { Router } from "express";
-import { keyAddedLog, keyUpdatedLog, keyDeletedLog } from "../middlewares/key.logs.middleware.js";
-import { getKeys, addKey, updateKey, deleteKey } from "../controllers/key.controller.js";
+
+import {
+    keyOnlyFetch,
+    keyAddedLog,
+    keyUpdatedLog,
+    keyDeletedLog
+} from "../middlewares/key.logs.middleware.js";
+
+import {
+    getKeysDetails,
+    fetchKey,
+    addKey,
+    updateKey,
+    deleteKey
+} from "../controllers/key.controller.js";
+
+import {
+    validateCursor
+} from "../middlewares/validate.cursor.middleware.js";
+
+// import { fetchKeyLimiter } from "../middlewares/ratelimiters.middleware.js";
 
 const router = Router();
 
-router.get("/keys", getKeys);
+router.get("/keys", validateCursor, getKeysDetails);
 
-router.post("/key", keyAddedLog,addKey);
+// router.get("/key/:id", fetchKeyLimiter, keyOnlyFetch, fetchKey);
+router.get("/key/:id", keyOnlyFetch, fetchKey);
+
+router.post("/key", keyAddedLog, addKey);
 
 router.put("/key/:id", keyUpdatedLog, updateKey);
 

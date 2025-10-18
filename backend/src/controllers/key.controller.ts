@@ -6,17 +6,21 @@ import { Prisma } from "../generated/prisma/client.js";
 
 type ApiKeyValidatedData = z.infer<typeof ApiKeySchema>;
 
-const KEY_SELECT = {
+const KEY_METADATA_SELECT = {
   id: true,
   name: true,
   service: true,
-  key: true,
   reqSample: true,
   resSample: true,
   description: true,
   isActive: true,
   createdAt: true,
   updatedAt: true,
+} as const;
+
+const KEY_ONLY_SELECT = {
+  key: true,
+  userId: true,
 } as const;
 
 class ValidationError extends Error {
@@ -29,20 +33,37 @@ class ValidationError extends Error {
   }
 }
 
+
+
 async function keySchemaValidation(
   key: unknown,
   partial = false
 ): Promise<Partial<ApiKeyValidatedData>> {
   const schema = partial ? ApiKeySchema.partial() : ApiKeySchema;
 
-  const parsed = await schema.safeParseAsync(key);
-  if (!parsed.success) {
-    const errTree = z.treeifyError(parsed.error);
-    throw new ValidationError("Validation failed", errTree);
-  }
+  try {
+    const parsed = await schema.safeParseAsync(key);
 
-  return parsed.data as Partial<ApiKeyValidatedData>;
+    if (!parsed.success) {
+      const errTree = z.treeifyError(parsed.error);
+      throw new ValidationError("Validation failed", errTree);
+    }
+
+    return parsed.data as Partial<ApiKeyValidatedData>;
+  } catch (err: any) {
+    // Catch unexpected runtime errors during parsing
+    if (err instanceof ValidationError) {
+      // Already a structured validation error → rethrow
+      throw err;
+    }
+    console.error("KEY_VALIDATION_RUNTIME_ERROR:", err);
+    throw new ValidationError("Unexpected error during validation", {
+      originalError: err.message ?? err,
+    });
+  }
 }
+
+
 
 async function getProfileId(authId: string) {
   const profile = await prisma.profile.findUnique({
@@ -54,19 +75,40 @@ async function getProfileId(authId: string) {
   return profile.id;
 }
 
-
-export const getKeys = async (req: Request, res: Response) => {
+///////
+const LIMIT=10;
+//////
+export const getKeysDetails = async (req: Request, res: Response) => {
   try {
     const authId = req.user?.sub;
     if (!authId) return res.status(401).json({ error: "Unauthorized" });
 
     const profileId = await getProfileId(authId);
+    const cursor = req.query.cursor as string | undefined; // optional cursor
+
     const keys = await prisma.apiKey.findMany({
       where: { userId: profileId },
-      select: KEY_SELECT,
+      take: (LIMIT+1), // fetch 1 extra to see if there's more
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : 0, // skip the cursor itself
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: KEY_METADATA_SELECT,
     });
 
-    return res.status(200).json(keys);
+
+    const hasMore = keys.length > LIMIT;
+
+    const keysToReturn = keys.slice(0, LIMIT);
+
+    const nextCursor = hasMore
+      ? keysToReturn[keysToReturn.length - 1]?.id ?? null
+      : null;
+
+    return res.status(200).json({
+      data: keysToReturn,
+      nextCursor,
+      hasMore: hasMore,
+    });
   } catch (err: any) {
     console.error("GET_KEYS_ERROR:", err);
     return res
@@ -74,6 +116,38 @@ export const getKeys = async (req: Request, res: Response) => {
       .json({ error: err.message ?? "Server error", details: err.details });
   }
 };
+
+
+export const fetchKey = async (req: Request, res: Response) => {
+  try {
+    const authId = req.user?.sub;
+    if (!authId) return res.status(401).json({ error: "Unauthorized" });
+
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: "Missing key id" });
+
+    const profileId = await getProfileId(authId);
+
+    // Verify ownership
+    const key = await prisma.apiKey.findUnique({
+      where: { id },
+      select: KEY_ONLY_SELECT,
+    });
+
+    if (!key || key.userId !== profileId)
+      return res.status(404).json({ error: "Key not found" });
+
+    return res.status(200).json({
+      key: key.key,
+    });
+  } catch (err: any) {
+    console.error("FETCH_KEY_ERROR:", err);
+    return res
+      .status(err.status ?? 500)
+      .json({ error: err.message ?? "Server error", details: err.details });
+  }
+};
+
 
 export const addKey = async (req: Request, res: Response) => {
   try {
@@ -104,7 +178,7 @@ export const addKey = async (req: Request, res: Response) => {
             ? Prisma.JsonNull
             : resSample,
       },
-      select: KEY_SELECT,
+      select: KEY_METADATA_SELECT,
     });
 
     return res.status(201).json(key);
@@ -158,7 +232,7 @@ export const updateKey = async (req: Request, res: Response) => {
     const key = await prisma.apiKey.update({
       where: { id },
       data: updateData,
-      select: KEY_SELECT,
+      select: KEY_METADATA_SELECT,
     });
 
     return res.status(200).json(key);

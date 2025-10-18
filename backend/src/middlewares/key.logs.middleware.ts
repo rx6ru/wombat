@@ -27,6 +27,10 @@ const logKeyAction = async (action: string, req: Request) => {
   }
 };
 
+const keyOnlyFetch = async (req: Request, res: Response, next: NextFunction) => {
+  await logKeyAction("Fetch Only", req);
+}
+
 const keyAddedLog = async (req: Request, res: Response, next: NextFunction) => {
     await logKeyAction("ADD", req);
     next();
@@ -42,4 +46,4 @@ const keyDeletedLog = async (req: Request, res: Response, next: NextFunction) =>
     next();
 }
 
-export { keyAddedLog, keyUpdatedLog, keyDeletedLog };
+export { keyOnlyFetch, keyAddedLog, keyUpdatedLog, keyDeletedLog };
