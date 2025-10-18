@@ -10,8 +10,8 @@ const app=express();
 app.use(cors());
 app.use(express.json());
 
-app.use("api/user", protectRoute,userRoutes);
-app.use("api/key", protectRoute, keyRoutes);
+app.use("/api/user", protectRoute,userRoutes);
+app.use("/api/key", protectRoute, keyRoutes);
 
 //fallback route
 app.use((req, res) => res.status(404).json(

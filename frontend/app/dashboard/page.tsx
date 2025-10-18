@@ -1,26 +1,27 @@
-import { createClient } from '../../lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { DashboardClient } from '../../components/dashboard/DashboardClient'
-import type { ApiKey } from '../../lib/types'
+import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { DashboardClient } from '@/components/dashboard/DashboardClient';
+import { ApiKey } from '@/lib/types';
 
 export default async function DashboardPage() {
-  const supabase = createClient()
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
 
   const {
     data: { session },
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getSession();
 
   if (!session) {
-    redirect('/login')
+    redirect('/login');
   }
 
-  let apiKeys: ApiKey[] = []
-  let fetchError: string | null = null
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+  let apiKeys: ApiKey[] = [];
+  let fetchError: string | null = null;
 
   try {
-    // Fetch API keys from your backend
-    const response = await fetch(`${apiUrl}/key/keys`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const response = await fetch(`${apiUrl}/api/key/keys`, {
       headers: {
         Authorization: `Bearer ${session.access_token}`,
       },
@@ -28,11 +29,23 @@ export default async function DashboardPage() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Failed to fetch keys: ${response.statusText}`);
+      throw new Error(`Failed to fetch keys: ${response.statusText}`);
     }
     
-    apiKeys = await response.json()
+    const data = await response.json();
+    const keys = data.data;
+
+    // FIX: Ensure that the data received from the API is an array.
+    // This prevents the "not iterable" error if the API returns a non-array response (e.g., an error object).
+    if (Array.isArray(keys)) {
+      apiKeys = keys;
+    } else {
+      // If the response is not an array, default to an empty array and log an error.
+      apiKeys = [];
+      fetchError = "Received an invalid response from the server.";
+      console.error("Dashboard fetch error: Expected an array of keys, but received:", keys);
+    }
+
   } catch (error: unknown) {
     console.error("Dashboard fetch error:", error);
     if (error instanceof Error) {
@@ -48,6 +61,6 @@ export default async function DashboardPage() {
       accessToken={session.access_token}
       fetchError={fetchError}
     />
-  )
+  );
 }
 

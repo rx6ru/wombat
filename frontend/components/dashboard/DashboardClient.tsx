@@ -28,7 +28,7 @@ export function DashboardClient({
     const router = useRouter();
     const supabase = createClient();
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
@@ -39,7 +39,7 @@ export function DashboardClient({
     const handleAddKey = async (newKeyData: ApiKeyInput) => {
         setModalError(null);
         try {
-            const response = await fetch(`${apiUrl}/key/key`, {
+            const response = await fetch(`${apiUrl}/api/key/key`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -64,7 +64,7 @@ export function DashboardClient({
 
     const handleDeleteKey = async (keyId: string) => {
         try {
-            const response = await fetch(`${apiUrl}/key/key/${keyId}`, {
+            const response = await fetch(`${apiUrl}/api/key/key/${keyId}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
