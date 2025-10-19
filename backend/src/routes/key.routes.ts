@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import {
-    keyOnlyFetch,
+    keyOnlyFetchLog,
     keyAddedLog,
     keyUpdatedLog,
     keyDeletedLog
@@ -9,6 +9,7 @@ import {
 
 import {
     getKeysDetails,
+    searchKeys,
     fetchKey,
     addKey,
     updateKey,
@@ -25,8 +26,10 @@ const router = Router();
 
 router.get("/keys", validateCursor, getKeysDetails);
 
+router.get("/keys/search", validateCursor, searchKeys);
+
 // router.get("/key/:id", fetchKeyLimiter, keyOnlyFetch, fetchKey);
-router.get("/key/:id", keyOnlyFetch, fetchKey);
+router.get("/key/:id", keyOnlyFetchLog, fetchKey);
 
 router.post("/key", keyAddedLog, addKey);
 

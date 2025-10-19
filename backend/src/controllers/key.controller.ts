@@ -76,7 +76,7 @@ async function getProfileId(authId: string) {
 }
 
 ///////
-const LIMIT=10;
+const LIMIT = 10;
 //////
 export const getKeysDetails = async (req: Request, res: Response) => {
   try {
@@ -88,7 +88,7 @@ export const getKeysDetails = async (req: Request, res: Response) => {
 
     const keys = await prisma.apiKey.findMany({
       where: { userId: profileId },
-      take: (LIMIT+1), // fetch 1 extra to see if there's more
+      take: (LIMIT + 1), // fetch 1 extra to see if there's more
       cursor: cursor ? { id: cursor } : undefined,
       skip: cursor ? 1 : 0, // skip the cursor itself
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -116,6 +116,62 @@ export const getKeysDetails = async (req: Request, res: Response) => {
       .json({ error: err.message ?? "Server error", details: err.details });
   }
 };
+
+
+//////////////    Search Keys     ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+export const searchKeys = async (req: Request, res: Response) => {
+  try {
+    const authId = req.user?.sub;
+    if (!authId) return res.status(401).json({ error: "Unauthorized" });
+
+    const profileId = await getProfileId(authId);
+    const query = (req.query.q as string || "").trim();
+    const cursor = req.query.cursor as string | undefined;
+
+    if (!query) {
+      return res.status(400).json({ error: "Missing search query" });
+    }
+
+    const keys = await prisma.apiKey.findMany({
+      where: {
+        userId: profileId,
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { service: { contains: query, mode: "insensitive" } },
+          { description: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      take: LIMIT + 1,
+      cursor: cursor ? { id: cursor } : undefined,
+      skip: cursor ? 1 : 0,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: KEY_METADATA_SELECT,
+    });
+
+    const hasMore = keys.length > LIMIT;
+    const keysToReturn = keys.slice(0, LIMIT);
+
+    const nextCursor = hasMore
+      ? keysToReturn[keysToReturn.length - 1]?.id ?? null
+      : null;
+
+    return res.status(200).json({
+      data: keysToReturn,
+      nextCursor,
+      hasMore,
+    });
+  } catch (err: any) {
+    console.error("SEARCH_KEYS_ERROR:", err);
+    return res
+      .status(err.status ?? 500)
+      .json({ error: err.message ?? "Server error", details: err.details });
+  }
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 export const fetchKey = async (req: Request, res: Response) => {
@@ -169,14 +225,14 @@ export const addKey = async (req: Request, res: Response) => {
           reqSample === undefined
             ? undefined
             : reqSample === null
-            ? Prisma.JsonNull
-            : reqSample,
+              ? Prisma.JsonNull
+              : reqSample,
         resSample:
           resSample === undefined
             ? undefined
             : resSample === null
-            ? Prisma.JsonNull
-            : resSample,
+              ? Prisma.JsonNull
+              : resSample,
       },
       select: KEY_METADATA_SELECT,
     });
@@ -219,14 +275,14 @@ export const updateKey = async (req: Request, res: Response) => {
         reqSample === undefined
           ? undefined
           : reqSample === null
-          ? Prisma.JsonNull
-          : reqSample,
+            ? Prisma.JsonNull
+            : reqSample,
       resSample:
         resSample === undefined
           ? undefined
           : resSample === null
-          ? Prisma.JsonNull
-          : resSample,
+            ? Prisma.JsonNull
+            : resSample,
     };
 
     const key = await prisma.apiKey.update({
