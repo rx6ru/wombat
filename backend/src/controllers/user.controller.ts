@@ -52,10 +52,12 @@ const updateUserInfo = async (req: Request, res: Response) => {
         const authId = getId(req, res);
         if (!authId) return; 
 
-        const { username } = req.body;
+        let { username } = req.body;
         if (!username || typeof username !== "string" || username.trim().length < 3) {
             return res.status(400).json({ error: "Invalid username" });
         }
+
+        username=username.trim();
 
         const existingProfile = await prisma.profile.findUnique({ where: { authId } });
         if (!existingProfile) {
