@@ -5,8 +5,7 @@ import WelcomeClient from '../../components/auth/WelcomeClient';
 
 // This is the server component for the onboarding page
 export default async function WelcomePage() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   // 1. Get the current user session
   const { data: { session } } = await supabase.auth.getSession();

@@ -1,12 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard/DashboardClient';
 import { ApiKey } from '@/lib/types';
 
 export default async function DashboardPage() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   const {
     data: { session },
