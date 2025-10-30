@@ -7,6 +7,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 
+// A simple inline SVG for the Home icon
+const HomeIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="lucide lucide-home mr-2"
+  >
+    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+
 // A simple inline SVG for the Google icon
 const GoogleIcon = () => (
   <svg
@@ -64,22 +83,28 @@ export default function LoginPage() {
 
   return (
     <div className="dark-dotted-background flex min-h-screen flex-col items-center justify-center p-4">
+      <Link href="/" className="absolute top-4 left-4">
+        <Button variant="outline" className="text-zinc-400 hover:text-zinc-100 border-zinc-700 hover:border-zinc-500">
+          <HomeIcon />
+          Wombat Vault
+        </Button>
+      </Link>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-950/80 p-8 shadow-2xl backdrop-blur-lg"
+        className="w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-950/50 p-8 shadow-lg backdrop-blur-sm"
       >
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-zinc-100">Welcome Back</h1>
-          <p className="mt-2 text-zinc-400">
+          <h1 className="text-2xl font-bold text-zinc-100">Welcome Back</h1>
+          <p className="mt-2 text-sm text-zinc-400">
             Log in to access your Wombat Vault.
           </p>
         </div>
 
         <Button
           variant="outline"
-          className="w-full mt-8"
+          className="w-full mt-6"
           onClick={handleGoogleLogin}
           disabled={loading}
         >
@@ -87,45 +112,56 @@ export default function LoginPage() {
           Log in with Google
         </Button>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-zinc-700" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-zinc-950 px-2 text-zinc-500">
-              Or log in with email
-            </span>
-          </div>
+        <div className="my-6 flex items-center">
+            <div className="flex-grow border-t border-zinc-700"></div>
+            <span className="mx-4 flex-shrink text-xs uppercase text-zinc-500">Or</span>
+            <div className="flex-grow border-t border-zinc-700"></div>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
-          <Input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <Input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div>
+            <label className="text-xs font-medium text-zinc-400" htmlFor="email">Email</label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-zinc-400" htmlFor="password">Password</label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="mt-1"
+            />
+          </div>
 
-          {error && <p className="text-sm text-center text-red-400">{error}</p>}
+          <div className="text-right text-sm">
+            <Link href="/login/forgot-password" className="font-medium text-zinc-400 hover:underline">
+              Forgot password?
+            </Link>
+          </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          {error && <p className="text-sm text-center text-red-400 pt-2">{error}</p>}
+
+          <Button type="submit" className="w-full !mt-6" disabled={loading}>
             {loading ? "Logging in..." : "Log In"}
           </Button>
         </form>
 
-        <p className="mt-8 text-center text-sm text-zinc-400">
+        <p className="mt-6 text-center text-sm text-zinc-400">
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="font-medium text-zinc-100 hover:underline"
+            className="font-medium text-white hover:underline"
           >
             Sign up here
           </Link>

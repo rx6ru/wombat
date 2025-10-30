@@ -10,6 +10,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
+// A simple inline SVG for the Home icon
+const HomeIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="lucide lucide-home mr-2"
+  >
+    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+
 // A simple inline SVG for the Google icon
 const GoogleIcon = () => (
   <svg className="w-4 h-4 mr-2" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -69,7 +88,7 @@ export default function SignupPage() {
     if (error) {
       setError(error.message);
     } else {
-      setMessage('Check your email to continue!');
+      router.push('/signup/verify-email');
     }
     setLoading(false);
   };
@@ -87,6 +106,12 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 dark-dotted-background">
+      <Link href="/" className="absolute top-4 left-4">
+        <Button variant="outline" className="text-zinc-400 hover:text-zinc-100 border-zinc-700 hover:border-zinc-500">
+          <HomeIcon />
+          Wombat Vault
+        </Button>
+      </Link>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
