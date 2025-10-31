@@ -4,41 +4,41 @@ import { useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { LogOut, Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react"; // Removed LogOut
 
 import { Button } from "../ui/button";
 import { ApiKeyCard } from "./ApiKeyCard";
 import { AddKeyModal } from "./AddKeyModal";
+import { UserNav } from "./UserNav"; // Import the new UserNav
 import type { ApiKey, ApiKeyInput } from "../../lib/types";
 
 interface DashboardClientProps {
     initialApiKeys: ApiKey[];
     accessToken: string;
     fetchError: string | null;
+    username: string; // Add username prop
 }
 
 export function DashboardClient({
     initialApiKeys,
     accessToken,
     fetchError,
+    username, // Get username from props
 }: DashboardClientProps) {
     const [apiKeys, setApiKeys] = useState<ApiKey[]>(initialApiKeys);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalError, setModalError] = useState<string | null>(null);
-    const router = useRouter();
+    const router = useRouter(); // Keep router for profile nav
     const supabase = createClient();
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        router.push('/login');
-        router.refresh();
-    };
+    // handleLogout is now inside UserNav.tsx
 
     const handleAddKey = async (newKeyData: ApiKeyInput) => {
         setModalError(null);
         try {
+            // 1. Create the new key
             const response = await fetch(`${apiUrl}/api/key/key`, {
                 method: "POST",
                 headers: {
@@ -53,9 +53,22 @@ export function DashboardClient({
                 throw new Error(errorData.error || "Failed to add key");
             }
 
-            const addedKey = await response.json();
-            setApiKeys((prevKeys) => [...prevKeys, addedKey]);
-            setIsModalOpen(false);
+            // 2. Refetch the list of keys to get the most up-to-date data
+            const newKeysResponse = await fetch(`${apiUrl}/api/key/keys`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              cache: 'no-store',
+            });
+            
+            if (!newKeysResponse.ok) {
+                throw new Error("Key was created, but failed to refetch the list.");
+            }
+
+            const keysData = await newKeysResponse.json();
+            if (Array.isArray(keysData.data)) {
+                setApiKeys(keysData.data);
+            }
+            
+            setIsModalOpen(false); // Close modal on success
         } catch (error: any) {
             console.error("Error adding key:", error);
             setModalError(error.message);
@@ -72,14 +85,14 @@ export function DashboardClient({
             });
 
             if (response.status !== 204) {
-                const errorData = await response.json();
+                 const errorData = await response.json();
                 throw new Error(errorData.error || "Failed to delete key");
             }
 
             setApiKeys((prevKeys) => prevKeys.filter((key) => key.id !== keyId));
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error deleting key:", error);
-            // Here you could add a user-facing error message, e.g., using a toast notification
+            // You could show a toast notification here
         }
     };
 
@@ -91,14 +104,11 @@ export function DashboardClient({
                         <h1 className="text-xl font-bold text-zinc-100">
                             Wombat Vault
                         </h1>
-                        <div className="flex items-center gap-2">
-                            <Button onClick={() => setIsModalOpen(true)} size="sm">
-                                <Plus className="mr-2 h-4 w-4" /> Add Key
-                            </Button>
-                            <Button onClick={handleLogout} variant="outline" size="icon">
-                                <LogOut className="h-5 w-5" />
-                            </Button>
+                        {/* --- MODIFIED HEADER --- */}
+                        <div className="flex items-center gap-4">
+                            <UserNav username={username} />
                         </div>
+                        {/* --- END MODIFIED HEADER --- */}
                     </div>
                 </header>
 
@@ -135,13 +145,25 @@ export function DashboardClient({
                                     className="col-span-full text-center py-24 text-zinc-500"
                                 >
                                     <p className="text-lg">Your vault is empty.</p>
-                                    <p>Click &quot;Add Key&quot; to get started.</p>
+                                    <p>Click the &quot;+&quot; button to get started.</p>
                                 </motion.div>
                             )
                         )}
                     </AnimatePresence>
                 </main>
             </div>
+
+            {/* --- FLOATING ADD KEY BUTTON --- */}
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              className="fixed bottom-8 right-8 z-50 rounded-full h-14 w-14 shadow-lg text-white bg-zinc-700 hover:bg-zinc-600"
+              size="icon"
+              aria-label="Add new API key"
+            >
+              <Plus className="h-6 w-6" />
+            </Button>
+            {/* --- END FLOATING BUTTON --- */}
+
             <AddKeyModal
                 isOpen={isModalOpen}
                 onClose={() => { setIsModalOpen(false); setModalError(null); }}
