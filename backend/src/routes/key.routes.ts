@@ -1,5 +1,7 @@
 import { Router } from "express";
 
+import { createRateLimiter } from "../middlewares/rateLimiter.js";
+
 import {
     keyOnlyFetchLog,
     keyAddedLog,
@@ -24,12 +26,15 @@ import {
 
 const router = Router();
 
-router.get("/keys", validateCursor, getKeysDetails);
+const standardRL=createRateLimiter( 10, "10 s");
+const strictRL=createRateLimiter(3, "5 s");
+
+router.get("/keys", standardRL, validateCursor, getKeysDetails);
 
 router.get("/keys/search", validateCursor, searchKeys);
 
 // router.get("/key/:id", fetchKeyLimiter, keyOnlyFetch, fetchKey);
-router.get("/key/:id", keyOnlyFetchLog, fetchKey);
+router.get("/key/:id", strictRL, keyOnlyFetchLog, fetchKey);
 
 router.post("/key", keyAddedLog, addKey);
 
