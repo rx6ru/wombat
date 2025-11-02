@@ -4,6 +4,7 @@ import { AlertTriangle } from "lucide-react";
 import { ApiKeyCard } from "./ApiKeyCard";
 import { EditKeyModal } from "./EditKeyModal";
 import { KeyDetailsModal } from "./KeyDetailsModal";
+import { AddProxyModal } from "./AddProxyModal";
 import type { ApiKey, ApiKeyInput } from "../../lib/types";
 
 interface ApiKeysViewProps {
@@ -11,6 +12,7 @@ interface ApiKeysViewProps {
   fetchError: string | null;
   onDeleteKey: (id: string) => void;
   onEditKey: (id: string, keyData: ApiKeyInput) => Promise<void>;
+  onGenerateProxy: (apiKey: ApiKey) => void;
   hasMore: boolean;
   accessToken: string;
 }
@@ -20,11 +22,13 @@ export function ApiKeysView({
   fetchError,
   onDeleteKey,
   onEditKey,
+  onGenerateProxy,
   hasMore,
   accessToken,
 }: ApiKeysViewProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isAddProxyModalOpen, setIsAddProxyModalOpen] = useState(false);
   const [selectedApiKey, setSelectedApiKey] = useState<ApiKey | null>(null);
 
   const handleEdit = (apiKey: ApiKey) => {
@@ -37,6 +41,11 @@ export function ApiKeysView({
     setIsInfoModalOpen(true);
   };
 
+  const handleGenerateProxy = (apiKey: ApiKey) => {
+    setSelectedApiKey(apiKey);
+    setIsAddProxyModalOpen(true);
+  };
+
   const handleCloseEditModal = () => {
     setSelectedApiKey(null);
     setIsEditModalOpen(false);
@@ -45,6 +54,11 @@ export function ApiKeysView({
   const handleCloseInfoModal = () => {
     setSelectedApiKey(null);
     setIsInfoModalOpen(false);
+  };
+
+  const handleCloseAddProxyModal = () => {
+    setSelectedApiKey(null);
+    setIsAddProxyModalOpen(false);
   };
 
   const handleEditKey = async (keyData: ApiKeyInput) => {
@@ -80,6 +94,7 @@ export function ApiKeysView({
               onDelete={onDeleteKey}
               onEdit={handleEdit}
               onInfo={handleInfo}
+              onGenerateProxy={handleGenerateProxy}
               accessToken={accessToken}
             />
           ))}
@@ -109,6 +124,13 @@ export function ApiKeysView({
           onClose={handleCloseInfoModal}
           apiKey={selectedApiKey}
           accessToken={accessToken}
+        />
+      )}
+      {selectedApiKey && (
+        <AddProxyModal
+          isOpen={isAddProxyModalOpen}
+          onClose={handleCloseAddProxyModal}
+          apiKey={selectedApiKey}
         />
       )}
     </AnimatePresence>
