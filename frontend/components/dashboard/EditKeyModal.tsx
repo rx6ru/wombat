@@ -1,20 +1,23 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { ApiKeyInput } from "@/lib/types";
+import type { ApiKey, ApiKeyInput } from "@/lib/types";
 
-interface AddKeyModalProps {
+interface EditKeyModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddKey: (keyData: ApiKeyInput) => Promise<void>;
+  onEditKey: (keyData: ApiKeyInput) => Promise<void>;
+  apiKey: ApiKey;
   apiError?: string | null;
 }
 
-export function AddKeyModal({ isOpen, onClose, onAddKey, apiError }: AddKeyModalProps) {
+export function EditKeyModal({ isOpen, onClose, onEditKey, apiKey, apiError }: EditKeyModalProps) {
   const [title, setTitle] = useState("");
   const [key, setKey] = useState("");
   const [service, setService] = useState("");
@@ -24,30 +27,44 @@ export function AddKeyModal({ isOpen, onClose, onAddKey, apiError }: AddKeyModal
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState('');
 
-  const handleClose = () => {
-    setTitle("");
-    setKey("");
-    setService("");
-    setDescription("");
-    setReqSample("");
-    setResSample("");
-    setFormError("");
-    onClose();
-  };
+  useEffect(() => {
+    if (apiKey) {
+      setTitle(apiKey.name);
+      setKey(""); // Do not pre-fill the key for security reasons
+      setService(apiKey.service || "");
+      setDescription(apiKey.description || "");
+      setReqSample(apiKey.reqSample ? JSON.stringify(apiKey.reqSample, null, 2) : "");
+      setResSample(apiKey.resSample ? JSON.stringify(apiKey.resSample, null, 2) : "");
+    }
+  }, [apiKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
-    if (!title || !key) {
-        setFormError('Title and API Key are required.');
+    if (!title) {
+        setFormError('Title is required.');
         return;
     }
 
     setIsLoading(true);
-    await onAddKey({ name: title, key, service, description, reqSample, resSample });
+
+    const payload: ApiKeyInput = {
+      name: title,
+      service,
+      description,
+      reqSample,
+      resSample,
+    };
+
+    // Only add key to payload if it's provided
+    if (key) {
+      payload.key = key;
+    }
+
+    await onEditKey(payload);
     setIsLoading(false);
-    handleClose();
+    // Parent component will close modal on success
   };
 
   return (
@@ -58,7 +75,7 @@ export function AddKeyModal({ isOpen, onClose, onAddKey, apiError }: AddKeyModal
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={handleClose}
+          onClick={onClose}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -69,8 +86,8 @@ export function AddKeyModal({ isOpen, onClose, onAddKey, apiError }: AddKeyModal
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-zinc-100">Add New API Key</h2>
-              <Button variant="ghost" size="icon" onClick={handleClose} className="text-zinc-400 hover:bg-zinc-800">
+              <h2 className="text-2xl font-bold text-zinc-100">Edit API Key</h2>
+              <Button variant="ghost" size="icon" onClick={onClose} className="text-zinc-400 hover:bg-zinc-800">
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -88,12 +105,11 @@ export function AddKeyModal({ isOpen, onClose, onAddKey, apiError }: AddKeyModal
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-zinc-400">API Key</label>
+                  <label className="text-sm font-medium text-zinc-400">API Key (Optional, leave blank to keep current)</label>
                   <Input
                     placeholder="sk-..."
                     value={key}
                     onChange={(e) => setKey(e.target.value)}
-                    required
                     className="mt-1"
                   />
                 </div>
@@ -144,11 +160,11 @@ export function AddKeyModal({ isOpen, onClose, onAddKey, apiError }: AddKeyModal
                 )}
 
                 <div className="flex justify-end gap-4 pt-4">
-                  <Button type="button" variant="secondary" onClick={handleClose}>
+                  <Button type="button" variant="secondary" onClick={onClose}>
                     Cancel
                   </Button>
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Adding..." : "Add Key"}
+                    {isLoading ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               </form>
