@@ -47,6 +47,14 @@ export function EditKeyModal({ isOpen, onClose, onEditKey, apiKey, apiError }: E
         return;
     }
 
+    try {
+      if (reqSample) JSON.parse(reqSample);
+      if (resSample) JSON.parse(resSample);
+    } catch (error) {
+      setFormError("Invalid JSON format in Request or Result Sample.");
+      return;
+    }
+
     setIsLoading(true);
 
     const payload: ApiKeyInput = {

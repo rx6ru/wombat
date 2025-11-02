@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
 import { ApiKeyCard } from "./ApiKeyCard";
 import { EditKeyModal } from "./EditKeyModal";
+import { KeyDetailsModal } from "./KeyDetailsModal";
 import type { ApiKey, ApiKeyInput } from "../../lib/types";
 
 interface ApiKeysViewProps {
@@ -23,6 +24,7 @@ export function ApiKeysView({
   accessToken,
 }: ApiKeysViewProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [selectedApiKey, setSelectedApiKey] = useState<ApiKey | null>(null);
 
   const handleEdit = (apiKey: ApiKey) => {
@@ -30,9 +32,19 @@ export function ApiKeysView({
     setIsEditModalOpen(true);
   };
 
+  const handleInfo = (apiKey: ApiKey) => {
+    setSelectedApiKey(apiKey);
+    setIsInfoModalOpen(true);
+  };
+
   const handleCloseEditModal = () => {
     setSelectedApiKey(null);
     setIsEditModalOpen(false);
+  };
+
+  const handleCloseInfoModal = () => {
+    setSelectedApiKey(null);
+    setIsInfoModalOpen(false);
   };
 
   const handleEditKey = async (keyData: ApiKeyInput) => {
@@ -67,6 +79,7 @@ export function ApiKeysView({
               apiKey={key}
               onDelete={onDeleteKey}
               onEdit={handleEdit}
+              onInfo={handleInfo}
               accessToken={accessToken}
             />
           ))}
@@ -88,6 +101,14 @@ export function ApiKeysView({
           onClose={handleCloseEditModal}
           onEditKey={handleEditKey}
           apiKey={selectedApiKey}
+        />
+      )}
+      {selectedApiKey && (
+        <KeyDetailsModal
+          isOpen={isInfoModalOpen}
+          onClose={handleCloseInfoModal}
+          apiKey={selectedApiKey}
+          accessToken={accessToken}
         />
       )}
     </AnimatePresence>

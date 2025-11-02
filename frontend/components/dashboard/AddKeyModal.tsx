@@ -44,6 +44,14 @@ export function AddKeyModal({ isOpen, onClose, onAddKey, apiError }: AddKeyModal
         return;
     }
 
+    try {
+      if (reqSample) JSON.parse(reqSample);
+      if (resSample) JSON.parse(resSample);
+    } catch (error) {
+      setFormError("Invalid JSON format in Request or Result Sample.");
+      return;
+    }
+
     setIsLoading(true);
     await onAddKey({ name: title, key, service, description, reqSample, resSample });
     setIsLoading(false);
