@@ -112,6 +112,7 @@ export function ApiKeysView({
       )}
       {selectedApiKey && (
         <EditKeyModal
+          key={`edit-${selectedApiKey.id}`}
           isOpen={isEditModalOpen}
           onClose={handleCloseEditModal}
           onEditKey={handleEditKey}
@@ -120,6 +121,7 @@ export function ApiKeysView({
       )}
       {selectedApiKey && (
         <KeyDetailsModal
+          key={`details-${selectedApiKey.id}`}
           isOpen={isInfoModalOpen}
           onClose={handleCloseInfoModal}
           apiKey={selectedApiKey}
@@ -128,6 +130,7 @@ export function ApiKeysView({
       )}
       {selectedApiKey && (
         <AddProxyModal
+          key={`proxy-${selectedApiKey.id}`}
           isOpen={isAddProxyModalOpen}
           onClose={handleCloseAddProxyModal}
           apiKey={selectedApiKey}

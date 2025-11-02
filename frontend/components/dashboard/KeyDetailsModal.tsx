@@ -60,7 +60,7 @@ export function KeyDetailsModal({ isOpen, onClose, apiKey, accessToken }: KeyDet
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-zinc-100">API Key Details</h2>
-              <Button variant="ghost" size="icon" onClick={onClose} className="text-zinc-400 hover:bg-zinc-800">
+              <Button variant="ghost" size="icon" onClick={onClose} className="text-zinc-400 hover:bg-zinc-800 cursor-pointer">
                 <X className="h-5 w-5" />
               </Button>
             </div>

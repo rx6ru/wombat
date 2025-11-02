@@ -70,7 +70,12 @@ export function ApiKeyCard({ apiKey, onDelete, onEdit, onInfo, onGenerateProxy, 
             <p className="text-sm font-medium text-zinc-400">{apiKey.service}</p>
           )}
         </div>
+        
         <div className="flex gap-1">
+          <Button variant="default" size="sm" onClick={(e) => {e.stopPropagation(); onGenerateProxy(apiKey);}} disabled={isDeleting} className="hover:bg-blue-800 cursor-pointer">
+            <ShieldPlus className="h-4 w-4 mr-2" />
+            Generate Proxy Key
+          </Button>
           <Button variant="ghost" size="icon" className="text-zinc-400 hover:bg-zinc-700 cursor-pointer" onClick={(e) => {e.stopPropagation(); handleCopy();}} disabled={isDeleting || isCopying}>
             {isCopying ? <Loader2 className="h-4 w-4 animate-spin" /> : (copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />)}
           </Button>
@@ -87,12 +92,6 @@ export function ApiKeyCard({ apiKey, onDelete, onEdit, onInfo, onGenerateProxy, 
         <p className="text-sm text-zinc-400">{apiKey.description}</p>
       )}
 
-      <div className="flex justify-end mt-4">
-        <Button variant="default" size="sm" onClick={(e) => {e.stopPropagation(); onGenerateProxy(apiKey);}} disabled={isDeleting} className="hover:bg-blue-800 cursor-pointer">
-          <ShieldPlus className="h-4 w-4 mr-2" />
-          Generate Proxy Key
-        </Button>
-      </div>
       <ConfirmDeleteModal
         isOpen={isConfirmDeleteOpen}
         onClose={() => setIsConfirmDeleteOpen(false)}
