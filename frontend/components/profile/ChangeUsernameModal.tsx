@@ -88,6 +88,7 @@ export function ChangeUsernameModal({ initialUsername, accessToken, onClose, onU
                 size="icon"
                 onClick={handleGenerateRandomName}
                 aria-label="Generate random name"
+                className="cursor-pointer"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>

@@ -68,7 +68,7 @@ export function AddProxyModal({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="text-zinc-400 hover:bg-zinc-800"
+                className="text-zinc-400 hover:bg-zinc-800 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </Button>

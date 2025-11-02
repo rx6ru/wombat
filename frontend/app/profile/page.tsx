@@ -134,7 +134,7 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-2">
                       <p className="text-xl font-bold text-zinc-100">{profile.username}</p>
                       <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(true)}>
-                        <Edit className="h-4 w-4 text-zinc-400" />
+                        <Edit className="h-4 w-4 text-zinc-400 cursor-pointer" />
                       </Button>
                     </div>
                   </div>
