@@ -35,3 +35,13 @@ model ApiKey {
 
   profile      Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model EncryptionKey {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @unique @db.Uuid
+  encryptionKey String   // the actual key string
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  profile      Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
