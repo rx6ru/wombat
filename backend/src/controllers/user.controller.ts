@@ -64,41 +64,6 @@ const updateUserInfo = async (req: Request, res: Response) => {
             return res.status(404).json({ error: "Profile not found" });
         }
 
-        // --- START: Update Supabase Auth User ---
-        // We do this in a separate try/catch so a failure here doesn't
-        // prevent the local profile from being updated.
-        try {
-          // 1. Get the current auth user to preserve any existing metadata
-          const { data: authUserData, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(authId);
-          
-          if (authUserError) {
-            throw new Error(`Failed to fetch auth user: ${authUserError.message}`);
-          }
-
-          const existingMetadata = authUserData.user.user_metadata || {};
-
-          // 2. Update the user's metadata in Supabase Auth
-          const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-            authId,
-            {
-              // Merge existing metadata with the new display_name
-              user_metadata: { ...existingMetadata, display_name: username }
-            }
-          );
-
-          if (updateError) {
-            throw new Error(`Failed to update Supabase Auth user: ${updateError.message}`);
-          }
-          
-          console.log(`Successfully updated display_name for authId: ${authId}`);
-
-        } catch (authUpdateError: any) {
-          // Log the error but don't block the main profile update
-          console.error("Error updating Supabase Auth user metadata:", authUpdateError.message);
-        }
-        // --- END: Update Supabase Auth User ---
-
-        // Continue to update the local Prisma Profile table
         const updatedProfile = await prisma.profile.update({
             where: { authId },
             data: { username },

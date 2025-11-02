@@ -25,7 +25,6 @@ export function UserNav({ username }: UserNavProps) {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
-    router.refresh()
   }
 
   // Get initials for the avatar fallback
