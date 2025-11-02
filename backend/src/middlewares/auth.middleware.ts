@@ -2,7 +2,7 @@ import { jwtVerify, createRemoteJWKSet } from "jose";
 import type { Request, Response, NextFunction } from "express";
 import {config} from "../config/env.config.js";
 
-const JWKS_URL = config.supabase.jwks_url;
+const JWKS_URL = config.supabase.jwksUrl;
 const JWKS = createRemoteJWKSet(new URL(JWKS_URL));
 
 

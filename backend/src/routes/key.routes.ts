@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { createRateLimiter } from "../middlewares/rateLimiter.js";
+import { createRateLimiter } from "../middlewares/rateLimiter.middleware.js";
 
 import {
     keyOnlyFetchLog,
