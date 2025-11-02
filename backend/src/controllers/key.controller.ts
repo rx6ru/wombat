@@ -4,6 +4,8 @@ import prisma from "../config/prisma.config.js";
 import { z } from "zod";
 import { Prisma } from "../generated/prisma/client.js";
 
+import { encryptKey, decryptKey } from "../utils/encryption.utils.js";
+
 type ApiKeyValidatedData = z.infer<typeof ApiKeySchema>;
 
 const KEY_METADATA_SELECT = {
@@ -207,7 +209,10 @@ export const fetchKey = async (req: Request, res: Response) => {
     if (!key || key.userId !== profileId)
       throw new NotFoundError("Key not found");
 
-    return res.status(200).json({ key: key.key });
+    // 🔓 Decrypt before returning
+    const decryptedKey = await decryptKey(profileId, key.key);
+
+    return res.status(200).json({ key: decryptedKey });
   } catch (err: any) {
     console.error("FETCH_KEY_ERROR:", err);
     return res
@@ -220,37 +225,35 @@ export const fetchKey = async (req: Request, res: Response) => {
 
 export const addKey = async (req: Request, res: Response) => {
   try {
-    const validatedInput = (await keySchemaValidation(
-      req.body
-    )) as ApiKeyValidatedData;
+    const validatedInput = (await keySchemaValidation(req.body)) as ApiKeyValidatedData;
 
     const authId = req.user?.sub;
     if (!authId) throw new UnauthorizedError("Unauthorized");
 
     const profileId = await getProfileId(authId);
-    const { reqSample, resSample, ...rest } = validatedInput;
+    const { key, reqSample, resSample, ...rest } = validatedInput;
 
-    const key = await prisma.apiKey.create({
+    if (!key) throw new ValidationError("Missing API key to store");
+
+    // 🔐 Encrypt the API key using user's encryption key (auto-creates if missing)
+    const encryptedKey = await encryptKey(profileId, key);
+
+    const apiKey = await prisma.apiKey.create({
       data: {
         userId: profileId,
+        key: encryptedKey, // store encrypted key
         ...rest,
         reqSample:
-          reqSample === undefined
-            ? undefined
-            : reqSample === null
-              ? Prisma.JsonNull
-              : reqSample,
+          reqSample === undefined ? undefined :
+          reqSample === null ? Prisma.JsonNull : reqSample,
         resSample:
-          resSample === undefined
-            ? undefined
-            : resSample === null
-              ? Prisma.JsonNull
-              : resSample,
+          resSample === undefined ? undefined :
+          resSample === null ? Prisma.JsonNull : resSample,
       },
       select: KEY_METADATA_SELECT,
     });
 
-    return res.status(201).json(key);
+    return res.status(201).json(apiKey);
   } catch (err: any) {
     console.error("ADD_KEY_ERROR:", err);
     return res
@@ -258,6 +261,7 @@ export const addKey = async (req: Request, res: Response) => {
       .json({ error: err.message ?? "Server error", details: err.details });
   }
 };
+
 
 // --------------------------------------------------------------------------
 
@@ -282,31 +286,31 @@ export const updateKey = async (req: Request, res: Response) => {
     if (Object.keys(validatedInput).length === 0)
       throw new ValidationError("No update fields provided");
 
-    const { reqSample, resSample, ...rest } = validatedInput;
+    const { key, reqSample, resSample, ...rest } = validatedInput;
 
-    const updateData = {
+    let updateData: any = {
       ...rest,
       reqSample:
-        reqSample === undefined
-          ? undefined
-          : reqSample === null
-            ? Prisma.JsonNull
-            : reqSample,
+        reqSample === undefined ? undefined :
+        reqSample === null ? Prisma.JsonNull : reqSample,
       resSample:
-        resSample === undefined
-          ? undefined
-          : resSample === null
-            ? Prisma.JsonNull
-            : resSample,
+        resSample === undefined ? undefined :
+        resSample === null ? Prisma.JsonNull : resSample,
     };
 
-    const key = await prisma.apiKey.update({
+    // 🔐 If user updated their API key, encrypt the new one
+    if (key) {
+      const encryptedKey = await encryptKey(profileId, key);
+      updateData.key = encryptedKey;
+    }
+
+    const updatedKey = await prisma.apiKey.update({
       where: { id },
       data: updateData,
       select: KEY_METADATA_SELECT,
     });
 
-    return res.status(200).json(key);
+    return res.status(200).json(updatedKey);
   } catch (err: any) {
     console.error("UPDATE_KEY_ERROR:", err);
     return res
@@ -314,6 +318,7 @@ export const updateKey = async (req: Request, res: Response) => {
       .json({ error: err.message ?? "Server error", details: err.details });
   }
 };
+
 
 // --------------------------------------------------------------------------
 
