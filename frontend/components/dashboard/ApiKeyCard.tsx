@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { KeyRound, Copy, Trash2, Check, Edit, Loader2 } from "lucide-react";
+import { KeyRound, Copy, Trash2, Check, Edit, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ApiKey } from "../../lib/types";
 import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
+import { KeyDetailsModal } from "./KeyDetailsModal";
 
 interface ApiKeyCardProps {
   apiKey: ApiKey;
   onDelete: (id: string) => Promise<void>;
   onEdit: (apiKey: ApiKey) => void;
+  onInfo: (apiKey: ApiKey) => void;
   accessToken: string;
 }
 
-export function ApiKeyCard({ apiKey, onDelete, onEdit, accessToken }: ApiKeyCardProps) {
+export function ApiKeyCard({ apiKey, onDelete, onEdit, onInfo, accessToken }: ApiKeyCardProps) {
   const [copied, setCopied] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -68,6 +70,9 @@ export function ApiKeyCard({ apiKey, onDelete, onEdit, accessToken }: ApiKeyCard
           )}
         </div>
         <div className="flex gap-1">
+          <Button variant="ghost" size="icon" className="text-zinc-400 hover:bg-zinc-700" onClick={() => onInfo(apiKey)} disabled={isDeleting}>
+            <Info className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="icon" className="text-zinc-400 hover:bg-zinc-700" onClick={() => onEdit(apiKey)} disabled={isDeleting}>
             <Edit className="h-4 w-4" />
           </Button>
