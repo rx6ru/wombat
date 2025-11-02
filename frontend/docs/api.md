@@ -6,7 +6,7 @@ This is a Node.js/Express backend API built with TypeScript that provides secure
 
 - **Authentication**: Supabase JWT tokens verified via JWKS
 - **Database**: PostgreSQL with Prisma ORM
-- **Security**: Rate limiting (commented out), CORS, input validation with Zod
+- **Security**: Rate limiting (Upstash Redis), CORS, input validation with Zod, AES-256-GCM encryption for API keys
 - **Architecture**: MVC pattern with middleware-based request processing
 
 All routes are **protected** and require a **JWT token** in the `Authorization` header. Tokens are verified via Supabase JWKS.
@@ -61,10 +61,62 @@ These routes are used to manage API keys with full CRUD operations and paginatio
   * Returns maximum 10 keys per request
   * Keys are ordered by creation date (newest first) and then by ID
   * Does not return the actual key value (use `/key/:id` for that)
+  * Rate limited: 10 requests per 10 seconds
 
 ---
 
-### 2️⃣ **Fetch a single API key**
+### 2️⃣ **Search API keys**
+
+* **Endpoint:** `GET /api/key/keys/search`
+* **Description:** Searches API keys by name, service, or description with pagination support. Case-insensitive search across multiple fields.
+* **Request Format:** Query parameters
+* **Required Parameters:**
+  * `q` (string, required): Search query string
+* **Optional Parameters:** 
+  * `cursor` (string, optional): Cursor for pagination (returns keys after this cursor)
+* **Headers:**
+
+  ```
+  Authorization: Bearer <YOUR_JWT_TOKEN>
+  ```
+* **Response Format:**
+
+```json
+{
+  "data": [
+    {
+      "id": "string",
+      "name": "string",
+      "service": "string",
+      "reqSample": "jsonb|null",
+      "resSample": "jsonb|null",
+      "description": "string",
+      "isActive": true,
+      "createdAt": "date",
+      "updatedAt": "date"
+    }
+  ],
+  "nextCursor": "string|null",
+  "hasMore": true
+}
+```
+
+* **Example Request:**
+  ```
+  GET /api/key/keys/search?q=openai
+  GET /api/key/keys/search?q=production&cursor=abc123
+  ```
+
+* **Notes:** 
+  * Returns maximum 10 keys per request
+  * Searches across name, service, and description fields
+  * Case-insensitive matching
+  * Keys are ordered by creation date (newest first) and then by ID
+  * Returns 400 error if search query is missing or empty
+
+---
+
+### 3️⃣ **Fetch a single API key**
 
 * **Endpoint:** `GET /api/key/key/:id`
 * **Description:** Retrieves the actual key value for a specific API key by ID.
@@ -84,12 +136,14 @@ These routes are used to manage API keys with full CRUD operations and paginatio
 ```
 
 * **Notes:**
-  * This endpoint returns only the key value, not metadata
+  * This endpoint returns only the decrypted key value, not metadata
   * Key ownership is verified before returning the value
+  * Keys are automatically decrypted using AES-256-GCM encryption
+  * Rate limited: 3 requests per 5 seconds
 
 ---
 
-### 3️⃣ **Add a new API key**
+### 4️⃣ **Add a new API key**
 
 * **Endpoint:** `POST /api/key/key`
 * **Description:** Adds a new API key with validation and logging.
@@ -137,9 +191,14 @@ Content-Type: application/json
   * Description: Optional, max 500 characters
   * reqSample/resSample: Must be valid JSON or null
 
+* **Security:**
+  * API keys are automatically encrypted using AES-256-GCM before storage
+  * Each user has a unique encryption key stored securely in the database
+  * Encryption keys are auto-generated on first key creation
+
 ---
 
-### 4️⃣ **Update an existing API key**
+### 5️⃣ **Update an existing API key**
 
 * **Endpoint:** `PUT /api/key/key/:id`
 * **Description:** Updates an existing API key. Only include fields you want to update. Key ownership is verified before update.
@@ -187,9 +246,13 @@ Content-Type: application/json
   * All validation rules from the add endpoint apply to respective fields
   * Returns 404 if key not found or user doesn't own the key
 
+* **Security:**
+  * If updating the key value, it will be automatically re-encrypted
+  * Key ownership is verified before allowing any updates
+
 ---
 
-### 5️⃣ **Delete an API key**
+### 6️⃣ **Delete an API key**
 
 * **Endpoint:** `DELETE /api/key/key/:id`
 * **Description:** Deletes an API key permanently. Key ownership is verified before deletion.
@@ -198,10 +261,8 @@ Content-Type: application/json
 * **Request Format:** None
 * **Response Format:**
 
-```json
-{
-  "message": "Key deleted successfully"
-}
+```
+HTTP 204 No Content
 ```
 
 * **Headers:**
@@ -333,6 +394,14 @@ The API uses consistent error response formats:
 - **Function**: Verifies JWT tokens using Supabase JWKS
 - **Adds**: `req.user` with `sub` (user ID) property
 
+### Rate Limiting Middleware
+- **File**: `rateLimiter.middleware.ts`
+- **Provider**: Upstash Redis with sliding window algorithm
+- **Limits**: 
+  - Standard: 10 requests per 10 seconds (GET /keys, search)
+  - Strict: 3 requests per 5 seconds (GET /key/:id)
+- **Headers**: Returns X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+
 ### Key Logging Middleware
 - **File**: `key.logs.middleware.ts`
 - **Functions**: Logs key operations (fetch, add, update, delete)
@@ -343,11 +412,6 @@ The API uses consistent error response formats:
 - **Function**: Validates pagination cursor parameter
 - **Validation**: Ensures cursor is valid string if provided
 
-### Rate Limiting (Currently Disabled)
-- **File**: `ratelimiters.middleware.ts`
-- **Status**: Commented out but configured for key fetch operations
-- **Limits**: 5 requests per minute per user
-
 ---
 
 ## **Data Models**
@@ -355,26 +419,42 @@ The API uses consistent error response formats:
 ### API Key Model
 ```typescript
 {
-  name: string;           // Required, 1-100 chars
-  service?: string;       // Optional, max 50 chars
-  key: string;            // Required, 1-500 chars
-  reqSample?: any;        // Optional JSON
-  resSample?: any;        // Optional JSON
+  id: string;            // UUID, auto-generated
+  userId: string;        // Profile UUID, foreign key
+  name: string;          // Required, 1-100 chars
+  service?: string;      // Optional, max 50 chars
+  key: string;           // Required, 1-500 chars (stored encrypted)
+  reqSample?: any;       // Optional JSON
+  resSample?: any;       // Optional JSON
   description?: string;  // Optional, max 500 chars
-  isActive?: boolean;    // Optional, defaults to true
+  isActive: boolean;     // Defaults to true
+  createdAt: Date;       // Auto-generated
+  updatedAt: Date;       // Auto-updated
 }
 ```
 
 ### Profile Model
 ```typescript
 {
+  id: string;                 // UUID, auto-generated
+  authId: string;             // Supabase Auth UUID, unique
+  username: string;           // User display name
+  email: string;              // User email
+  createdAt: Date;            // Auto-generated
+  updatedAt: Date;            // Auto-updated
+  apiKeys: ApiKey[];          // Related API keys
+  encryptionKey: EncryptionKey?; // User's encryption key
+}
+```
+
+### Encryption Key Model
+```typescript
+{
   id: string;            // UUID, auto-generated
-  authId: string;        // Supabase Auth UUID, unique
-  username: string;      // User display name
-  email: string;         // User email
+  userId: string;        // Profile UUID, unique foreign key
+  encryptionKey: string; // Base64-encoded 256-bit encryption key
   createdAt: Date;       // Auto-generated
   updatedAt: Date;       // Auto-updated
-  apiKeys: ApiKey[];     // Related API keys
 }
 ```
 
@@ -401,6 +481,8 @@ Required environment variables:
 - `SUPABASE_SECRET_KEY`: Supabase service role key
 - `SUPABASE_PUBLISHABLE_KEY`: Supabase anon key
 - `SUPABASE_JWKS_URL`: Supabase JWKS endpoint URL
+- `UPSTASH_REDIS_REST_URL`: Upstash Redis REST API URL
+- `UPSTASH_REDIS_REST_TOKEN`: Upstash Redis REST API token
 
 ---
 
@@ -414,19 +496,30 @@ Required environment variables:
 
 ### Route Structure
 ```
-/api/user/info/*    -> User profile management
-/api/key/*          -> API key management
+/api/user/info/*         -> User profile management
+/api/key/keys            -> List all keys (paginated)
+/api/key/keys/search     -> Search keys
+/api/key/key/:id         -> Fetch/Update/Delete specific key
+/api/key/key             -> Add new key
 ```
 
 ### Database Schema
 - **Profile**: User profiles linked to Supabase Auth
-- **ApiKey**: API keys belonging to users with metadata
-- **Relations**: One-to-many (Profile -> ApiKey)
+- **ApiKey**: API keys belonging to users with metadata (encrypted)
+- **EncryptionKey**: Per-user encryption keys for API key encryption
+- **Relations**: 
+  - One-to-many (Profile -> ApiKey)
+  - One-to-one (Profile -> EncryptionKey)
+  - Cascade delete on profile removal
 
 ### Security Features
-- JWT token verification via Supabase JWKS
+- JWT token verification via Supabase JWKS (ES256 algorithm)
 - User ownership verification for all key operations
 - Input validation using Zod schemas
+- **AES-256-GCM encryption** for API keys at rest
+- Per-user encryption keys with SHA-256 key derivation
+- Authenticated encryption with 12-byte IVs and auth tags
+- Rate limiting via Upstash Redis (sliding window algorithm)
 - Error handling with detailed validation messages
 - Request logging for key operations
 
@@ -443,8 +536,11 @@ npm run postinstall  # Generate Prisma client
 ## **Recent Changes & Features**
 
 ### Added Features
-- **Pagination**: Cursor-based pagination for API key listing (10 items per page)
-- **Key Fetching**: Separate endpoint to retrieve actual key values
+- **Encryption**: AES-256-GCM encryption for all API keys with per-user encryption keys
+- **Search**: Full-text search across key name, service, and description fields
+- **Pagination**: Cursor-based pagination for API key listing and search (10 items per page)
+- **Rate Limiting**: Upstash Redis-based rate limiting with configurable windows
+- **Key Fetching**: Separate endpoint to retrieve decrypted key values
 - **Validation**: Comprehensive input validation using Zod schemas
 - **Logging**: Detailed logging for key operations with user identification
 - **Error Handling**: Structured error responses with validation details
@@ -453,7 +549,9 @@ npm run postinstall  # Generate Prisma client
 ### Technical Improvements
 - **TypeScript**: Full TypeScript implementation with proper typing
 - **Prisma**: Database ORM with generated client in `src/generated/prisma`
-- **Middleware**: Modular middleware system for auth, validation, and logging
+- **Middleware**: Modular middleware system for auth, rate limiting, validation, and logging
 - **Environment Config**: Centralized configuration management
 - **Username Generation**: Creative username generator with adjective-animal combinations
+- **Encryption Utils**: Secure encryption/decryption utilities with automatic key management
+- **Express 5**: Using latest Express version with improved error handling
 

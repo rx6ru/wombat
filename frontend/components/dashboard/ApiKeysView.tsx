@@ -15,6 +15,7 @@ interface ApiKeysViewProps {
   onGenerateProxy: (apiKey: ApiKey) => void;
   hasMore: boolean;
   accessToken: string;
+  noResults: boolean;
 }
 
 export function ApiKeysView({
@@ -25,6 +26,7 @@ export function ApiKeysView({
   onGenerateProxy,
   hasMore,
   accessToken,
+  noResults,
 }: ApiKeysViewProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
@@ -106,8 +108,14 @@ export function ApiKeysView({
           animate={{ opacity: 1 }}
           className="col-span-full text-center py-24 text-zinc-500"
         >
-          <p className="text-lg">Your vault is empty.</p>
-          <p>Click the &quot;Add Key&quot; button to get started.</p>
+          {noResults ? (
+            <p className="text-lg">No API keys found matching your search.</p>
+          ) : (
+            <>
+              <p className="text-lg">Your vault is empty.</p>
+              <p>Click the &quot;Add Key&quot; button to get started.</p>
+            </>
+          )}
         </motion.div>
       )}
       {selectedApiKey && (
