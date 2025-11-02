@@ -4,44 +4,45 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("SUPABASE_DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("SUPABASE_DATABASE_URL")
   directUrl = env("SUPABASE_DIRECT_URL")
 }
 
 model Profile {
-  id        String   @id @default(uuid()) @db.Uuid
-  authId    String   @unique
-  username  String
-  email     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String          @id @default(uuid()) @db.Uuid
+  authId         String          @unique
+  username       String
+  email          String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
-  apiKeys   ApiKey[]
+  apiKeys        ApiKey[]
+  encryptionKey  EncryptionKey?
 }
 
 model ApiKey {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  name      String
-  service   String?
-  key       String
-  reqSample Json?
-  resSample Json?
-  description String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String      @id @default(uuid()) @db.Uuid
+  userId       String      @db.Uuid
+  name         String
+  service      String?
+  key          String
+  reqSample    Json?
+  resSample    Json?
+  description  String?
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   profile      Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model EncryptionKey {
-  id           String    @id @default(uuid()) @db.Uuid
-  userId       String    @unique @db.Uuid
-  encryptionKey String   // the actual key string
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @unique @db.Uuid
+  encryptionKey String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  profile      Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile       Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
