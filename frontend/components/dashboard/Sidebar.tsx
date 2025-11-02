@@ -36,7 +36,7 @@ export function Sidebar() {
             key={item.name}
             variant={isActive ? "secondary" : "ghost"}
             className={cn(
-              "flex items-center justify-start gap-3 rounded-md px-3 py-2 text-zinc-400 transition-all hover:text-zinc-100 hover:bg-zinc-800",
+              "flex items-center justify-start gap-3 rounded-md px-3 py-2 text-zinc-400 transition-all hover:text-zinc-100 hover:bg-zinc-800 cursor-pointer",
               isActive && "bg-zinc-800 text-zinc-50"
             )}
             onClick={() => handleViewChange(item.view)}

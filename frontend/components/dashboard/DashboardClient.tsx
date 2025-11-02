@@ -207,16 +207,13 @@ function DashboardClientContent({
     setIsAddProxyModalOpen(false);
   };
 
-  const openModal = () => {
-    if (currentView === "api_keys") {
-      setIsAddKeyModalOpen(true);
-    } else {
-      setIsAddProxyModalOpen(true);
-    }
+  const handleGenerateProxy = (apiKey: ApiKey) => {
+    setIsAddProxyModalOpen(true);
   };
 
-  const buttonText =
-    currentView === "api_keys" ? "Add API Key" : "Create Proxy Key";
+  const openAddKeyModal = () => {
+    setIsAddKeyModalOpen(true);
+  };
 
   return (
     <>
@@ -248,61 +245,63 @@ function DashboardClientContent({
                 fetchError={fetchError}
                 onDeleteKey={handleDeleteKey}
                 onEditKey={handleEditKey}
+                onGenerateProxy={handleGenerateProxy}
                 hasMore={hasMore}
                 accessToken={accessToken}
               />
-            ) : (
-              <ProxyKeysView
-                proxyKeys={proxyKeys}
-                fetchError={proxyFetchError}
-              />
-            )}
+              ) : (
+                <ProxyKeysView
+                  proxyKeys={proxyKeys}
+                  fetchError={proxyFetchError}
+                />
+              )}
 
-            <motion.div
-              className="fixed bottom-8 right-8 z-20"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{
-                type: "spring",
-                stiffness: 260,
-                damping: 20,
-                delay: 0.5,
-              }}
-            >
-              <Button
-                size="lg"
-                variant="default"
-                className="rounded-full shadow-lg h-14 w-auto px-5 border border-zinc-700"
-                onClick={openModal}
-              >
-                <Plus className="mr-2 h-5 w-5" /> {buttonText}
-              </Button>
-            </motion.div>
-          </main>
+              {currentView === "api_keys" && (
+                <motion.div
+                  className="fixed bottom-8 right-8 z-20"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 20,
+                    delay: 0.5,
+                  }}
+                >
+                  <Button
+                    size="lg"
+                    variant="default"
+                    className="rounded-full shadow-lg h-14 w-auto px-5 border border-zinc-700 bg-zinc-900 hover:bg-violet-900 cursor-pointer"
+                    onClick={openAddKeyModal}
+                  >
+                    <Plus className="mr-2 h-5 w-5" /> Add API Key
+                  </Button>
+                </motion.div>
+              )}
+            </main>
+          </div>
         </div>
-      </div>
 
-      <AddKeyModal
-        isOpen={isAddKeyModalOpen}
-        onClose={() => {
-          setIsAddKeyModalOpen(false);
-          setModalError(null);
-        }}
-        onAddKey={handleAddKey}
-        apiError={modalError}
-      />
-
-      <AddProxyModal
-        isOpen={isAddProxyModalOpen}
-        onClose={() => {
-          setIsAddProxyModalOpen(false);
-          setModalError(null);
-        }}
-        onAddProxy={handleAddProxy}
-        apiError={modalError}
-      />
-    </>
-  );
+        <AddKeyModal
+          isOpen={isAddKeyModalOpen}
+          onClose={() => {
+            setIsAddKeyModalOpen(false);
+            setModalError(null);
+          }}
+          onAddKey={handleAddKey}
+          apiError={modalError}
+        />
+        <AddProxyModal
+          isOpen={isAddProxyModalOpen}
+          onClose={() => {
+            setIsAddProxyModalOpen(false);
+            setModalError(null);
+          }}
+          onAddProxy={handleAddProxy}
+          apiError={modalError}
+        />
+      </>
+    );
 }
 
 export function DashboardClient(props: DashboardClientProps) {
