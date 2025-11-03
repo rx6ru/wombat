@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 
 interface AddProxyModalProps {
   isOpen: boolean;
@@ -20,7 +21,11 @@ export function AddProxyModal({
   // onAddProxy,
   apiError,
 }: AddProxyModalProps) {
-  const [proxyName, setProxyName] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [totalUsageLimit, setTotalUsageLimit] = useState<number | ''>('');
+  const [usageLimitCalls, setUsageLimitCalls] = useState<number | ''>('');
+  const [usageLimitUnit, setUsageLimitUnit] = useState("minute"); // Default unit
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -28,14 +33,20 @@ export function AddProxyModal({
     e.preventDefault();
     setFormError("");
 
-    if (!proxyName) {
-      setFormError("Proxy Name is required.");
+    if (!title.trim()) {
+      setFormError("Title is required.");
       return;
     }
 
     setIsLoading(true);
     // Placeholder for API call
-    console.log("Creating proxy with name:", proxyName);
+    console.log("Creating proxy with:", {
+      title,
+      description,
+      totalUsageLimit,
+      usageLimitCalls,
+      usageLimitUnit,
+    });
     // await onAddProxy({ name: proxyName });
     await new Promise((resolve) => setTimeout(resolve, 1000)); // Fake network delay
     setIsLoading(false);
@@ -76,19 +87,73 @@ export function AddProxyModal({
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-zinc-400">
-                  Proxy Name
+                <label htmlFor="title" className="text-sm font-medium text-zinc-400">
+                  Title <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  id="title"
                   placeholder="e.g. Public GPT-4 Key"
-                  value={proxyName}
-                  onChange={(e) => setProxyName(e.target.value)}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   required
                   className="mt-1"
                 />
               </div>
 
-              {/* Future fields (like selecting an API key) would go here */}
+              <div>
+                <label htmlFor="description" className="text-sm font-medium text-zinc-400">
+                  Description (Optional)
+                </label>
+                <Textarea
+                  id="description"
+                  placeholder="A brief description of the proxy key's purpose."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="totalUsageLimit" className="text-sm font-medium text-zinc-400">
+                  Total Usage Limit (Optional)
+                </label>
+                <Input
+                  id="totalUsageLimit"
+                  type="number"
+                  placeholder="e.g. 100000"
+                  value={totalUsageLimit}
+                  onChange={(e) => setTotalUsageLimit(e.target.value === '' ? '' : Number(e.target.value))}
+                  min="0"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-zinc-400">
+                  Usage Limit per Unit Time (Optional)
+                </label>
+                <div className="flex gap-2 mt-1 items-center">
+                  <Input
+                    type="number"
+                    placeholder="Calls"
+                    value={usageLimitCalls}
+                    onChange={(e) => setUsageLimitCalls(e.target.value === '' ? '' : Number(e.target.value))}
+                    min="0"
+                    className="flex-grow"
+                  />
+                  <span className="text-zinc-400 text-sm">/</span>
+                  <select
+                    value={usageLimitUnit}
+                    onChange={(e) => setUsageLimitUnit(e.target.value)}
+                    className="flex-grow h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 text-zinc-100 bg-zinc-800/50 border-zinc-700"
+                  >
+                    <option value="minute">Minute</option>
+                    <option value="hour">Hour</option>
+                    <option value="day">Day</option>
+                    <option value="month">Month</option>
+                  </select>
+                </div>
+              </div>
 
               {(formError || apiError) && (
                 <p className="text-sm text-center text-red-400 pt-2">
