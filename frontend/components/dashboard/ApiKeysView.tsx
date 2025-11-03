@@ -5,6 +5,7 @@ import { ApiKeyCard } from "./ApiKeyCard";
 import { EditKeyModal } from "./EditKeyModal";
 import { KeyDetailsModal } from "./KeyDetailsModal";
 import { AddProxyModal } from "./AddProxyModal";
+import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import type { ApiKey, ApiKeyInput } from "../../lib/types";
 
 interface ApiKeysViewProps {
@@ -31,6 +32,7 @@ export function ApiKeysView({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isAddProxyModalOpen, setIsAddProxyModalOpen] = useState(false);
+  const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
   const [selectedApiKey, setSelectedApiKey] = useState<ApiKey | null>(null);
 
   const handleEdit = (apiKey: ApiKey) => {
@@ -48,6 +50,11 @@ export function ApiKeysView({
     setIsAddProxyModalOpen(true);
   };
 
+  const handleDelete = (apiKey: ApiKey) => {
+    setSelectedApiKey(apiKey);
+    setIsConfirmDeleteModalOpen(true);
+  };
+
   const handleCloseEditModal = () => {
     setSelectedApiKey(null);
     setIsEditModalOpen(false);
@@ -63,10 +70,22 @@ export function ApiKeysView({
     setIsAddProxyModalOpen(false);
   };
 
+  const handleCloseConfirmDeleteModal = () => {
+    setSelectedApiKey(null);
+    setIsConfirmDeleteModalOpen(false);
+  };
+
   const handleEditKey = async (keyData: ApiKeyInput) => {
     if (selectedApiKey) {
       await onEditKey(selectedApiKey.id, keyData);
       handleCloseEditModal();
+    }
+  };
+
+  const handleDeleteKeyConfirm = () => {
+    if (selectedApiKey) {
+      onDeleteKey(selectedApiKey.id);
+      handleCloseConfirmDeleteModal();
     }
   };
 
@@ -93,7 +112,7 @@ export function ApiKeysView({
             <ApiKeyCard
               key={key.id}
               apiKey={key}
-              onDelete={onDeleteKey}
+              onDelete={handleDelete}
               onEdit={handleEdit}
               onInfo={handleInfo}
               onGenerateProxy={handleGenerateProxy}
@@ -142,6 +161,16 @@ export function ApiKeysView({
           isOpen={isAddProxyModalOpen}
           onClose={handleCloseAddProxyModal}
           apiKey={selectedApiKey}
+        />
+      )}
+      {selectedApiKey && (
+        <ConfirmDeleteModal
+          key={`delete-${selectedApiKey.id}`}
+          isOpen={isConfirmDeleteModalOpen}
+          onClose={handleCloseConfirmDeleteModal}
+          onConfirm={handleDeleteKeyConfirm}
+          title="Delete API Key"
+          description="Are you sure you want to delete this API key? This action cannot be undone."
         />
       )}
     </AnimatePresence>

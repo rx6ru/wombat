@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
@@ -36,14 +37,19 @@ export function ConfirmDeleteModal({
             className="bg-zinc-950 w-full max-w-md m-4 p-6 rounded-lg border border-zinc-700 shadow-xl relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-bold text-zinc-100">{title}</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-zinc-100">{title}</h2>
+              <Button variant="ghost" size="icon" onClick={onClose} className="text-zinc-400 hover:bg-zinc-800 cursor-pointer">
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
             <p className="text-zinc-400 mt-2">{description}</p>
             <div className="flex justify-end gap-4 mt-6">
               <Button variant="secondary" onClick={onClose}>
-                No
+                Cancel
               </Button>
               <Button variant="destructive" onClick={onConfirm}>
-                Yes
+                Delete
               </Button>
             </div>
           </motion.div>
