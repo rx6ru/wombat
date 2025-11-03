@@ -44,11 +44,13 @@ function DashboardClientContent({
   );
   const [hasMore, setHasMore] = useState(initialApiKeys.hasMore);
   const [proxyKeys, setProxyKeys] = useState<ProxyKey[]>([]);
+  const [cachedProxyKeys, setCachedProxyKeys] = useState<ProxyKey[]>([]);
   const [proxyFetchError, setProxyFetchError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isViewChanging, setIsViewChanging] = useState(false);
+  const [demoKeyIndex, setDemoKeyIndex] = useState(0);
 
   const [noResults, setNoResults] = useState(false);
 
@@ -67,47 +69,19 @@ function DashboardClientContent({
   };
 
   useEffect(() => {
-    // When switching back to API keys, turn off loading state.
+    // When switching to API keys, turn off loading state.
     if (currentView === "api_keys") {
       setIsViewChanging(false);
       return;
     }
 
-    const abortController = new AbortController();
-    const fetchProxyKeys = async () => {
-      setProxyFetchError(null);
-      try {
-        const response = await fetch(`${apiUrl}/api/proxy/keys`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          cache: "no-store",
-          signal: abortController.signal,
-        });
+    // If currentView is "proxy_keys", we are not fetching from backend for demo.
+    // So, just ensure loading state is turned off.
+    if (currentView === "proxy_keys") {
+      setIsViewChanging(false);
+      return;
+    }
 
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch proxy keys: ${response.statusText}`
-          );
-        }
-
-        const data = await response.json();
-        setProxyKeys(data.data || []);
-      } catch (error: any) {
-        if (error.name !== "AbortError") {
-          console.error("Error fetching proxy keys:", error);
-          setProxyFetchError(error.message);
-        }
-      } finally {
-        setIsViewChanging(false);
-      }
-    };
-
-    fetchProxyKeys();
-
-    return () => {
-      abortController.abort();
-    };
   }, [currentView, accessToken, apiUrl]);
 
   const fetchMoreKeys = async () => {
@@ -239,10 +213,45 @@ function DashboardClientContent({
     }
   };
 
-  const handleAddProxy = async (proxyData: any) => {
-    console.log("Creating proxy...", proxyData);
+  const handleAddProxy = async (proxyData: { title: string; description: string }) => {
     setModalError(null);
-    setIsAddProxyModalOpen(false);
+    const demoKeys = [
+      process.env.NEXT_PUBLIC_DEMO_KEY_1,
+      process.env.NEXT_PUBLIC_DEMO_KEY_2,
+      process.env.NEXT_PUBLIC_DEMO_KEY_3,
+    ].filter(Boolean) as string[];
+
+    if (demoKeys.length === 0) {
+      setModalError("No demo keys available for creation.");
+      return;
+    }
+
+    // Create a fake key for demonstration purposes
+    await new Promise((resolve) => setTimeout(resolve, 500)); // Fake network delay
+
+    const keyToAssign = demoKeys[demoKeyIndex % demoKeys.length];
+
+    const newProxyKey: ProxyKey = {
+      id: `proxy_${new Date().getTime()}`,
+      name: proxyData.title,
+      description: proxyData.description,
+      key: keyToAssign,
+      service: "openai", // Placeholder
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      reqSample: null,
+      resSample: null,
+    };
+
+    setProxyKeys((prevKeys) => [newProxyKey, ...prevKeys]);
+    setCachedProxyKeys((prevKeys) => [newProxyKey, ...prevKeys]);
+    setDemoKeyIndex((prevIndex) => prevIndex + 1);
+  };
+
+  const handleDeleteProxyKey = (id: string) => {
+    setProxyKeys(prevKeys => prevKeys.filter(key => key.id !== id));
+    setCachedProxyKeys(prevKeys => prevKeys.filter(key => key.id !== id));
   };
 
   const handleGenerateProxy = (apiKey: ApiKey) => {
@@ -255,11 +264,25 @@ function DashboardClientContent({
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    const query = searchQuery.trim();
+    if (!query) return;
 
-    setIsSearching(true);
     setIsSearchActive(true);
     setNoResults(false);
+
+    if (currentView === 'proxy_keys') {
+      const filteredKeys = cachedProxyKeys.filter(key => 
+        key.name.toLowerCase().includes(query.toLowerCase()) ||
+        (key.description && key.description.toLowerCase().includes(query.toLowerCase()))
+      );
+      setProxyKeys(filteredKeys);
+      if (filteredKeys.length === 0) {
+        setNoResults(true);
+      }
+      return;
+    }
+
+    setIsSearching(true);
     try {
       const response = await fetch(`${apiUrl}/api/key/keys/search?q=${searchQuery}`, {
         headers: {
@@ -289,6 +312,12 @@ function DashboardClientContent({
     setSearchQuery("");
     setNoResults(false);
     if (isSearchActive) {
+      if (currentView === 'proxy_keys') {
+        setProxyKeys(cachedProxyKeys);
+        setIsSearchActive(false);
+        return;
+      }
+
       setIsSearchActive(false);
       setIsSearching(true);
       try {
@@ -384,6 +413,7 @@ function DashboardClientContent({
                 onDeleteKey={handleDeleteKey}
                 onEditKey={handleEditKey}
                 onGenerateProxy={handleGenerateProxy}
+                onAddProxy={handleAddProxy}
                 hasMore={hasMore}
                 accessToken={accessToken}
                 isSearching={isSearching}
@@ -393,6 +423,7 @@ function DashboardClientContent({
                 <ProxyKeysView
                   proxyKeys={proxyKeys}
                   fetchError={proxyFetchError}
+                  onDeleteProxyKey={handleDeleteProxyKey}
                 />
               )}
 
@@ -437,7 +468,7 @@ function DashboardClientContent({
             setIsAddProxyModalOpen(false);
             setModalError(null);
           }}
-          onAddProxy={handleAddProxy}
+          onAddProxy={async (data) => { console.log("Inline onAddProxy called with:", data); }}
           apiError={modalError}
         />
       </>

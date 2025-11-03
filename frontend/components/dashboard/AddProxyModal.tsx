@@ -11,14 +11,14 @@ import { Textarea } from "../ui/textarea";
 interface AddProxyModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // onAddProxy: (proxyData: any) => Promise<void>; // To be implemented
+  onAddProxy: (proxyData: { title: string; description: string }) => Promise<void>;
   apiError?: string | null;
 }
 
 export function AddProxyModal({
   isOpen,
   onClose,
-  // onAddProxy,
+  onAddProxy,
   apiError,
 }: AddProxyModalProps) {
   const [title, setTitle] = useState("");
@@ -39,17 +39,14 @@ export function AddProxyModal({
     }
 
     setIsLoading(true);
-    // Placeholder for API call
-    console.log("Creating proxy with:", {
-      title,
-      description,
-      totalUsageLimit,
-      usageLimitCalls,
-      usageLimitUnit,
-    });
-    // await onAddProxy({ name: proxyName });
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Fake network delay
+    await onAddProxy({ title, description });
     setIsLoading(false);
+    // Reset form on successful submission
+    setTitle("");
+    setDescription("");
+    setTotalUsageLimit('');
+    setUsageLimitCalls('');
+    setUsageLimitUnit("minute");
     onClose();
   };
 

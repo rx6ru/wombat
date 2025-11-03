@@ -14,6 +14,7 @@ interface ApiKeysViewProps {
   onDeleteKey: (id: string) => void;
   onEditKey: (id: string, keyData: ApiKeyInput) => Promise<void>;
   onGenerateProxy: (apiKey: ApiKey) => void;
+  onAddProxy: (proxyData: { title: string; description: string }) => Promise<void>;
   hasMore: boolean;
   accessToken: string;
   noResults: boolean;
@@ -25,6 +26,7 @@ export function ApiKeysView({
   onDeleteKey,
   onEditKey,
   onGenerateProxy,
+  onAddProxy,
   hasMore,
   accessToken,
   noResults,
@@ -160,7 +162,7 @@ export function ApiKeysView({
           key={`proxy-${selectedApiKey.id}`}
           isOpen={isAddProxyModalOpen}
           onClose={handleCloseAddProxyModal}
-          apiKey={selectedApiKey}
+          onAddProxy={onAddProxy}
         />
       )}
       {selectedApiKey && (
