@@ -1,12 +1,16 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { KeyRound, ShieldHalf } from "lucide-react";
 import { cn } from "../../lib/utils/utils";
 import { Button } from "../ui/button";
 
-export function Sidebar() {
-  const router = useRouter();
+interface SidebarProps {
+  onViewChange: (view: string) => void;
+  isViewChanging: boolean;
+}
+
+export function Sidebar({ onViewChange, isViewChanging }: SidebarProps) {
   const searchParams = useSearchParams();
   const currentView = searchParams.get("view") || "api_keys";
 
@@ -23,10 +27,6 @@ export function Sidebar() {
     },
   ];
 
-  const handleViewChange = (view: string) => {
-    router.push(`/dashboard?view=${view}`);
-  };
-
   return (
     <nav className="flex flex-col gap-2 p-4 pt-6">
       {navItems.map((item) => {
@@ -39,7 +39,8 @@ export function Sidebar() {
               "flex items-center justify-start gap-3 rounded-md px-3 py-2 text-zinc-400 transition-all hover:text-zinc-100 hover:bg-zinc-800 cursor-pointer",
               isActive && "bg-zinc-800 text-zinc-50"
             )}
-            onClick={() => handleViewChange(item.view)}
+            onClick={() => onViewChange(item.view)}
+            disabled={isViewChanging}
           >
             <item.icon className="h-4 w-4" />
             {item.name}

@@ -48,6 +48,7 @@ function DashboardClientContent({
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isViewChanging, setIsViewChanging] = useState(false);
 
   const [noResults, setNoResults] = useState(false);
 
@@ -55,34 +56,58 @@ function DashboardClientContent({
     searchParams.get("view") === "proxy_keys" ? "proxy_keys" : "api_keys";
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+  const handleViewChange = (view: string) => {
+    if (isViewChanging) {
+      return;
+    }
+    if (view !== currentView) {
+      setIsViewChanging(true);
+      router.push(view === "api_keys" ? "/dashboard" : `/dashboard?view=${view}`);
+    }
+  };
+
   useEffect(() => {
+    // When switching back to API keys, turn off loading state.
+    if (currentView === "api_keys") {
+      setIsViewChanging(false);
+      return;
+    }
+
+    const abortController = new AbortController();
     const fetchProxyKeys = async () => {
-      if (currentView === "proxy_keys") {
-        setProxyFetchError(null);
-        try {
-          const response = await fetch(`${apiUrl}/api/proxy/keys`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-            cache: "no-store",
-          });
+      setProxyFetchError(null);
+      try {
+        const response = await fetch(`${apiUrl}/api/proxy/keys`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          cache: "no-store",
+          signal: abortController.signal,
+        });
 
-          if (!response.ok) {
-            throw new Error(
-              `Failed to fetch proxy keys: ${response.statusText}`
-            );
-          }
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch proxy keys: ${response.statusText}`
+          );
+        }
 
-          const data = await response.json();
-          setProxyKeys(data.data || []);
-        } catch (error: any) {
+        const data = await response.json();
+        setProxyKeys(data.data || []);
+      } catch (error: any) {
+        if (error.name !== "AbortError") {
           console.error("Error fetching proxy keys:", error);
           setProxyFetchError(error.message);
         }
+      } finally {
+        setIsViewChanging(false);
       }
     };
 
     fetchProxyKeys();
+
+    return () => {
+      abortController.abort();
+    };
   }, [currentView, accessToken, apiUrl]);
 
   const fetchMoreKeys = async () => {
@@ -295,12 +320,17 @@ function DashboardClientContent({
 
   return (
     <>
+      {isViewChanging && (
+        <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-[9999] flex items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-zinc-100" />
+        </div>
+      )}
       <div className="flex min-h-screen w-full dark-dotted-background">
         <div className="hidden md:block md:w-64 bg-zinc-950/80 backdrop-blur-md border-r border-zinc-700">
           <div className="flex h-16 items-center border-b border-zinc-700 px-6">
             <h1 className="text-xl font-bold text-zinc-100">Wombat Vault</h1>
           </div>
-          <Sidebar />
+          <Sidebar onViewChange={handleViewChange} isViewChanging={isViewChanging} />
         </div>
 
         <div className="flex flex-1 flex-col">
