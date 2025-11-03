@@ -3,9 +3,10 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Loader2, Search, X } from "lucide-react";
 
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { AddKeyModal } from "./AddKeyModal";
 import { AddProxyModal } from "./AddProxyModal";
 import { UserNav } from "./UserNav";
@@ -44,6 +45,10 @@ function DashboardClientContent({
   const [hasMore, setHasMore] = useState(initialApiKeys.hasMore);
   const [proxyKeys, setProxyKeys] = useState<ProxyKey[]>([]);
   const [proxyFetchError, setProxyFetchError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  const [noResults, setNoResults] = useState(false);
 
   const currentView =
     searchParams.get("view") === "proxy_keys" ? "proxy_keys" : "api_keys";
@@ -215,6 +220,45 @@ function DashboardClientContent({
     setIsAddKeyModalOpen(true);
   };
 
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    setNoResults(false);
+    try {
+      const response = await fetch(`${apiUrl}/api/key/keys/search?q=${searchQuery}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to search keys: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setApiKeys(data.data);
+      setNextCursor(data.nextCursor);
+      setHasMore(data.hasMore);
+      if (data.data.length === 0) {
+        setNoResults(true);
+      }
+    } catch (error: any) {
+      console.error("Error searching keys:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setApiKeys(initialApiKeys.data);
+    setNextCursor(initialApiKeys.nextCursor);
+    setHasMore(initialApiKeys.hasMore);
+    setNoResults(false);
+  };
+
   return (
     <>
       <div className="flex min-h-screen w-full dark-dotted-background">
@@ -231,7 +275,37 @@ function DashboardClientContent({
               <h1 className="text-xl font-bold text-zinc-100 md:hidden">
                 Wombat Vault
               </h1>
-              <div className="hidden md:block"></div>
+              <div className="flex-1 flex justify-center px-4">
+                <form onSubmit={handleSearch} className="w-full max-w-md relative">
+                  <Input
+                    placeholder="Search API keys..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-zinc-800/50 border-zinc-700 pr-10"
+                  />
+                  {searchQuery && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-10 top-1/2 -translate-y-1/2 h-7 w-7 text-zinc-400 hover:bg-zinc-700"
+                      onClick={clearSearch}
+                      disabled={isSearching}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 text-zinc-400 hover:bg-zinc-700"
+                    disabled={isSearching}
+                  >
+                    {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  </Button>
+                </form>
+              </div>
               <div className="flex items-center gap-4">
                 <UserNav username={username} />
               </div>
@@ -248,6 +322,8 @@ function DashboardClientContent({
                 onGenerateProxy={handleGenerateProxy}
                 hasMore={hasMore}
                 accessToken={accessToken}
+                isSearching={isSearching}
+                noResults={noResults}
               />
               ) : (
                 <ProxyKeysView
