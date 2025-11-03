@@ -47,6 +47,7 @@ function DashboardClientContent({
   const [proxyFetchError, setProxyFetchError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   const [noResults, setNoResults] = useState(false);
 
@@ -188,6 +189,10 @@ function DashboardClientContent({
     const newApiKeys = apiKeys.filter((key) => key.id !== keyId);
     setApiKeys(newApiKeys);
 
+    if (isSearchActive && newApiKeys.length === 0) {
+      setNoResults(true);
+    }
+
     try {
       const response = await fetch(`${apiUrl}/api/key/key/${keyId}`, {
         method: "DELETE",
@@ -203,6 +208,9 @@ function DashboardClientContent({
     } catch (error: any) {
       console.error("Error deleting key:", error);
       setApiKeys(originalApiKeys);
+      if (isSearchActive && newApiKeys.length === 0) {
+        setNoResults(false);
+      }
     }
   };
 
@@ -225,6 +233,7 @@ function DashboardClientContent({
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
+    setIsSearchActive(true);
     setNoResults(false);
     try {
       const response = await fetch(`${apiUrl}/api/key/keys/search?q=${searchQuery}`, {
@@ -251,12 +260,37 @@ function DashboardClientContent({
     }
   };
 
-  const clearSearch = () => {
+  const clearSearch = async () => {
     setSearchQuery("");
-    setApiKeys(initialApiKeys.data);
-    setNextCursor(initialApiKeys.nextCursor);
-    setHasMore(initialApiKeys.hasMore);
     setNoResults(false);
+    if (isSearchActive) {
+      setIsSearchActive(false);
+      setIsSearching(true);
+      try {
+        const response = await fetch(`${apiUrl}/api/key/keys`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch keys: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setApiKeys(data.data);
+        setNextCursor(data.nextCursor);
+        setHasMore(data.hasMore);
+      } catch (error: any) {
+        console.error("Error fetching keys after clearing search:", error);
+        setApiKeys([]);
+        setNextCursor(null);
+        setHasMore(false);
+      } finally {
+        setIsSearching(false);
+      }
+    }
   };
 
   return (
