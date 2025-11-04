@@ -1,6 +1,6 @@
 "use client"
 
-import { LogOut, User as UserIcon } from "lucide-react"
+import { LogOut, User as UserIcon, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -25,6 +25,21 @@ export function UserNav({ username }: UserNavProps) {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  if (!username) {
+    return (
+      <Button
+        variant="ghost"
+        disabled
+        className="relative flex h-10 items-center gap-2 rounded-full border border-zinc-700 bg-zinc-950/50 px-3 py-2 text-sm font-medium text-zinc-100"
+      >
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-700 text-xs font-semibold">
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </div>
+        <span className="hidden sm:inline-block">Loading...</span>
+      </Button>
+    )
   }
 
   // Get initials for the avatar fallback
