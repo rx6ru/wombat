@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus, Loader2, Search, X } from "lucide-react";
@@ -357,7 +358,10 @@ function DashboardClientContent({
       <div className="flex min-h-screen w-full dark-dotted-background">
         <div className="hidden md:block md:w-64 bg-zinc-950/80 backdrop-blur-md border-r border-zinc-700">
           <div className="flex h-16 items-center border-b border-zinc-700 px-6">
-            <h1 className="text-xl font-bold text-zinc-100">Wombat Vault</h1>
+            <div className="flex items-center">
+                <Image src="/logo_white.svg" alt="Wombat Vault Logo" width={28} height={28} className="mr-2" />
+                <h1 className="text-xl font-bold text-zinc-100">Wombat Vault</h1>
+            </div>
           </div>
           <Sidebar onViewChange={handleViewChange} isViewChanging={isViewChanging} />
         </div>
@@ -365,9 +369,10 @@ function DashboardClientContent({
         <div className="flex flex-1 flex-col">
           <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-700 md:border-b-0">
             <div className="container mx-auto flex items-center justify-between h-16 px-4">
-              <h1 className="text-xl font-bold text-zinc-100 md:hidden">
-                Wombat Vault
-              </h1>
+              <div className="flex items-center md:hidden">
+                <Image src="/logo_white.svg" alt="Wombat Vault Logo" width={28} height={28} className="mr-2" />
+                <h1 className="text-xl font-bold text-zinc-100">Wombat Vault</h1>
+              </div>
               <div className="flex-1 flex justify-center px-4">
                 <form onSubmit={handleSearch} className="w-full max-w-md relative">
                   <Input

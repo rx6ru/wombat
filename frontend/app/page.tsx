@@ -1,10 +1,18 @@
 'use client';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24 dark-dotted-background overflow-hidden">
       <div className="z-10 text-center">
+        <Image
+          src="/logo_white.svg"
+          alt="Wombat Vault Logo"
+          width={200}
+          height={200}
+          className="mx-auto mb-4"
+        />
         <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-400 bg-opacity-50 mb-4">
           Wombat Vault
         </h1>

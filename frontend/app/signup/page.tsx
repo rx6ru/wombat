@@ -3,31 +3,13 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle2, XCircle } from 'lucide-react';
-
-// A simple inline SVG for the Home icon
-const HomeIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="lucide lucide-home mr-2"
-  >
-    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    <polyline points="9 22 9 12 15 12 15 22" />
-  </svg>
-);
 
 // A simple inline SVG for the Google icon
 const GoogleIcon = () => (
@@ -107,8 +89,8 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 dark-dotted-background">
       <Link href="/" className="absolute top-4 left-4">
-        <Button variant="outline" className="text-zinc-400 hover:text-zinc-100 border-zinc-700 hover:border-zinc-500">
-          <HomeIcon />
+        <Button variant="outline" className="text-zinc-400 hover:text-zinc-100 border-zinc-700 hover:border-zinc-500 cursor-pointer">
+          <Image src="/logo_white.svg" alt="Wombat Vault Logo" width={20} height={20} className="mr-2" />
           Wombat Vault
         </Button>
       </Link>
@@ -125,7 +107,7 @@ export default function SignupPage() {
 
         <Button 
             variant="outline" 
-            className="w-full mt-6" 
+            className="w-full mt-6 cursor-pointer text-zinc-400 hover:text-zinc-100" 
             onClick={handleGoogleSignIn}
             disabled={loading}
         >
