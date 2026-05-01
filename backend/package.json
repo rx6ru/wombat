@@ -8,14 +8,17 @@
   "main": "dist/server.js",
   "scripts": {
     "postinstall": "prisma generate",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --import tsx --test tests/**/*.test.ts",
     "dev": "tsx watch ./src/server.ts",
     "build": "tsc",
-    "start": "node ./dist/server.js"
+    "start": "node ./dist/server.js",
+    "openapi:write": "node --import tsx ./src/docs/openapi/write-openapi.ts"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@prisma/client": "^6.18.0",
     "@supabase/supabase-js": "^2.77.0",
+    "@types/swagger-ui-express": "^4.1.8",
     "@upstash/ratelimit": "^2.0.6",
     "@upstash/redis": "^1.35.6",
     "cors": "^2.8.5",
@@ -24,6 +27,7 @@
     "express-rate-limit": "^8.2.0",
     "jose": "^6.1.0",
     "prisma": "^6.18.0",
+    "swagger-ui-express": "^5.0.1",
     "zod": "^4.1.12"
   },
   "devDependencies": {

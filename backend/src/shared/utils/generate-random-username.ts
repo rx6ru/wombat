@@ -1,0 +1,15 @@
+const adjectives = [
+  'Happy', 'Skinny', 'Cool', 'Brave', 'Sleepy', 'Clever', 'Lazy', 'Cheerful', 'Sneaky', 'Curious', 'Jolly', 'Shy', 'Fierce', 'Gentle', 'Mischievous', 'Proud', 'Calm', 'Energetic', 'Friendly', 'Silly', 'Witty', 'Bold', 'Grumpy', 'Kind', 'Courageous', 'Playful', 'Lively', 'Quiet', 'Smart', 'Adventurous', 'Funny', 'Serious', 'Thoughtful', 'Daring', 'Sweet', 'Brilliant', 'Charming', 'Happy-go-lucky', 'Patient', 'Loyal', 'Optimistic', 'Pensive', 'Ambitious', 'Cheeky', 'Diligent', 'Curious-minded', 'Radiant', 'Gentle-hearted', 'Funky', 'Shimmering', 'Heroic', 'Inventive', 'Mellow', 'Bubbly', 'Majestic', 'Observant', 'Resourceful', 'Tricky', 'Warm', 'Vivacious', 'Energetic-hearted', 'Zealous', 'Friendly-faced', 'Nimble', 'Polite', 'Rascally', 'Sensitive', 'Tough', 'Wise', 'Affectionate', 'Bold-hearted', 'Caring', 'Dazzling', 'Fearless', 'Humble', 'Inspirational', 'Joyful', 'Kind-hearted', 'Lovable', 'Mysterious', 'Naughty', 'Outstanding', 'Playful-minded', 'Quiet-hearted', 'Respectful', 'Sassy', 'Tender', 'Upbeat', 'Vibrant', 'Whimsical', 'Youthful', 'Zany', 'Curious-eyed', 'Delightful', 'Eager',
+  'Golden', 'Silver', 'Crimson', 'Azure', 'Emerald', 'Ruby', 'Sapphire', 'Violet', 'Amber', 'Coral', 'Ivory', 'Jade', 'Pearl', 'Turquoise', 'Bronze', 'Copper', 'Platinum', 'Rose', 'Lavender', 'Mint', 'Scarlet', 'Indigo', 'Burgundy', 'Teal', 'Magenta', 'Chartreuse', 'Maroon', 'Navy', 'Olive', 'Plum',
+  'Stormy', 'Sunny', 'Misty', 'Frosty', 'Breezy', 'Cloudy', 'Starry', 'Moonlit', 'Dewy', 'Snowy', 'Rainy', 'Foggy', 'Windy', 'Lightning', 'Thunder', 'Icy', 'Blazing', 'Scorching', 'Chilly', 'Tropical', 'Arctic', 'Desert', 'Forest', 'Mountain', 'Ocean', 'River', 'Meadow', 'Prairie', 'Valley', 'Canyon',
+];
+
+const animals = [
+  'Panda', 'Tiger', 'Fox', 'Otter', 'Elephant', 'Lion', 'Rabbit', 'Wolf', 'Bear', 'Koala', 'Giraffe', 'Monkey', 'Hedgehog', 'Dolphin', 'Eagle', 'Penguin', 'Squirrel', 'Kangaroo', 'Leopard', 'Owl', 'Raccoon', 'Deer', 'Seal', 'Badger', 'Cheetah', 'Camel', 'Buffalo', 'Hawk', 'Horse', 'Alligator', 'Moose', 'Foxhound', 'Falcon', 'Goat', 'Sheep', 'Otterhound', 'Shark', 'Whale', 'Octopus', 'Crab', 'Lynx', 'Panther', 'Elephant Seal', 'Jaguar', 'Frog', 'Cobra', 'Toucan', 'Swan', 'Parrot', 'Rabbitfish', 'Chameleon', 'Beaver', 'Mole', 'Porcupine', 'Walrus', 'Armadillo', 'Ocelot', 'Tapir', 'Caribou', 'Antelope', 'Tortoise', 'Iguana', 'Pelican', 'Albatross', 'Stingray', 'Orangutan', 'Sea Lion', 'Mandrill', 'Buffalo Fish', 'Coyote', 'Bison', 'Wombat', 'Macaw', 'Kingfisher', 'Hummingbird', 'Platypus', 'Marmoset', 'Salamander', 'Gecko', 'Marlin', 'Swordfish', 'Pufferfish', 'Seahorse', 'Llama', 'Yak', 'Kudu', 'Caracal', 'Serval', 'Nilgai', 'Capybara', 'Tamarin', 'Quokka', 'Vulture', 'Ibex', 'Pangolin', 'Aardvark', 'Cassowary', 'Okapi', 'Muskox', 'Hyena',
+];
+
+export function generateRandomName(): string {
+  const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const animal = animals[Math.floor(Math.random() * animals.length)];
+  return `${adjective} ${animal}`;
+}

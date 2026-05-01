@@ -1,25 +1,3 @@
-import express from "express" ;
-import cors from "cors" ;
-import { config } from "./config/env.config.js";
-import userRoutes from "./routes/user.routes.js"
-import keyRoutes from "./routes/key.routes.js"
-import { protectRoute } from "./middlewares/auth.middleware.js";
+import { startServer } from './app/server.js';
 
-const app=express();
-
-app.use(cors());
-app.use(express.json());
-
-app.use("/api/user", protectRoute,userRoutes);
-app.use("/api/key", protectRoute, keyRoutes);
-
-//fallback route
-app.use((req, res) => res.status(404).json(
-    { 
-        error: "Not found" 
-    }
-));
-
-app.listen(config.port, () => console.log(
-    `Server running on port ${config.port}`
-));
+startServer();
